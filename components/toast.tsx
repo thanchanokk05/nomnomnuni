@@ -9,7 +9,7 @@ export default function Toast() {
 
   return (
     <View pointerEvents="none" style={styles.container}>
-      <View style={styles.toast}>
+      <View style={styles.pill}>
         <Text style={styles.text}>{toastMessage}</Text>
       </View>
     </View>
@@ -25,17 +25,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 9999,
   },
-  toast: {
-    backgroundColor: '#F39931',
+  pill: {
+    backgroundColor: '#22C55E',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
   },
   text: {
     color: '#fff',
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

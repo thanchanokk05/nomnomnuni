@@ -33,7 +33,7 @@ export default function FoodCard({ item }: { item: Food }) {
         accessibilityState={{ selected: fav }}
         onPress={() => toggleFavorite(item.id, item.name)}
         style={styles.heartButton}>
-        <MaterialIcons name={fav ? 'favorite' : 'favorite-border'} size={24} color={fav ? '#F39931' : '#2D2D2D'} />
+        <MaterialIcons name={fav ? 'favorite' : 'favorite-border'} size={24} color={fav ? '#15803D' : '#166534'} />
       </TouchableOpacity>
     </View>
   );
@@ -69,11 +69,11 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#2D2D2D',
+    color: '#052E16',
   },
   price: {
     marginTop: 6,
-    color: '#2D2D2D',
+    color: '#355E3B',
   },
   heartButton: {
     width: 44,

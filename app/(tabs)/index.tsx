@@ -27,7 +27,7 @@ export default function HomeScreen() {
     }
     setLoading(true);
     setTimeout(() => {
-      const results = FOODS.filter((f) => f.price <= num);
+      const results = FOODS.filter((f) => f.price === num);
       if (results.length === 0) {
         setError('No food available in this price range.');
       }
@@ -66,7 +66,7 @@ export default function HomeScreen() {
           </ThemedText>
 
           {loading ? (
-            <ActivityIndicator size="large" color="#F39931" style={{ marginTop: 20 }} />
+            <ActivityIndicator size="large" color="#166534" style={{ marginTop: 20 }} />
           ) : (
             <FlatList
               data={filtered}
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#FFF8EE',
+    backgroundColor: '#F0FDF4',
   },
   centerBox: {
     flex: 1,
@@ -123,9 +123,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#2D2D2D',
     marginVertical: 15,
+    borderWidth: 1,
+    borderColor: '#166534',
   },
   button: {
-    backgroundColor: '#F39931',
+    backgroundColor: '#166534',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 20,
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     marginTop: 10,
-    color: '#B00020',
+    color: '#7b091eff',
     fontWeight: '600',
   },
   listArea: {

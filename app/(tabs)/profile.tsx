@@ -1,7 +1,6 @@
 import React from 'react';
 import {
     Dimensions,
-    Image,
     SafeAreaView,
     ScrollView,
     StyleSheet,
@@ -10,45 +9,52 @@ import {
     View,
 } from 'react-native';
 
-const PRIMARY = '#f39931';
+import { useFavorites } from '@/context/favorites';
+import { useUser } from '@/context/user';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+
+const PRIMARY = '#86EFAC';
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
+  const { user, clearUser } = useUser();
+  const { favorites } = useFavorites();
+  const router = useRouter();
+
   const stats = [
-    { id: 'fav', label: 'Favorites', value: 12, emoji: '❤️' },
-    { id: 'orders', label: 'Orders', value: 5, emoji: '🍔' },
-    { id: 'reviews', label: 'Reviews', value: 4, emoji: '⭐' },
+    { id: 'fav', label: 'Favorites', value: favorites.length },
+    { id: 'reviews', label: 'Reviews', value: 4 },
   ];
 
   const menu = [
     'My Favorites',
-    'Order History',
     'Notifications',
     'Settings',
     'Help & Support',
   ];
+
+  const avatarSize = Math.min(140, width * 0.35);
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.top}>
           <View style={styles.headerCard}>
-            <Image
-              source={{ uri: 'https://i.pravatar.cc/300?img=12' }}
-              style={styles.avatar}
-            />
-            <Text style={styles.name}>Khung Khing</Text>
-            <Text style={styles.email}>khungkhing@email.com</Text>
-
-            <TouchableOpacity style={styles.editButton} accessibilityRole="button">
-              <Text style={styles.editText}>Edit Profile</Text>
-            </TouchableOpacity>
+            <View style={[styles.avatar, { justifyContent: 'center', alignItems: 'center' }]}>
+              <Ionicons name="person-circle" size={avatarSize} color="#DDD" />
+            </View>
+            <Text style={styles.name}>{user?.name ?? 'Guest'}</Text>
+            <Text style={styles.email}>{user?.email ?? 'guest@email.com'}</Text>
           </View>
 
           <View style={styles.statsCard}>
             {stats.map((s) => (
               <View key={s.id} style={styles.statItem}>
-                <Text style={styles.statEmoji}>{s.emoji}</Text>
+                <View style={styles.iconWrap}>
+                  {s.id === 'fav' && <Ionicons name="heart" size={22} color={PRIMARY} />}
+                  {s.id === 'reviews' && <FontAwesome name="star" size={20} color={PRIMARY} />}
+                </View>
                 <Text style={styles.statValue}>{s.value}</Text>
                 <Text style={styles.statLabel}>{s.label}</Text>
               </View>
@@ -62,14 +68,21 @@ export default function ProfileScreen() {
             {menu.map((m) => (
               <TouchableOpacity key={m} style={styles.menuItem} accessibilityRole="button">
                 <Text style={styles.menuText}>{m}</Text>
-                <Text style={styles.chevron}>›</Text>
+                <Ionicons name="chevron-forward" size={18} color="#BBB" />
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
         <View style={styles.bottom}>
-          <TouchableOpacity style={styles.logoutButton} accessibilityRole="button">
+          <TouchableOpacity
+            style={styles.logoutButton}
+            accessibilityRole="button"
+            onPress={() => {
+              clearUser();
+              router.replace('/login');
+            }}
+          >
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -84,7 +97,7 @@ const GAP = 16;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: '#F0FDF4',
   },
   scroll: {
     padding: GAP,
@@ -124,20 +137,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  editButton: {
-    marginTop: 16,
-    backgroundColor: PRIMARY,
-    paddingVertical: 12,
-    paddingHorizontal: 28,
-    borderRadius: 50,
-    alignItems: 'center',
-    width: '100%',
-  },
-  editText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
 
   statsCard: {
     flexDirection: 'row',
@@ -158,8 +157,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
-  statEmoji: {
-    fontSize: 22,
+  iconWrap: {
     marginBottom: 8,
   },
   statValue: {
@@ -215,7 +213,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   logoutButton: {
-    backgroundColor: '#D32F2F',
+    backgroundColor: '#DC2626',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
