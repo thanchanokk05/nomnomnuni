@@ -1,4 +1,4 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { ChevronsUpDown, Clock } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
     FlatList,
@@ -38,7 +38,7 @@ export default function HourDropdown({ label, value, onChange }: HourDropdownPro
   return (
     <View style={styles.container}>
       <View style={styles.inputWrapper}>
-        <MaterialIcons name="access-time" size={20} color="#94A3B8" style={styles.icon} />
+        <Clock size={20} color="#94A3B8" style={styles.icon} />
         
         <TextInput
           style={styles.textInput}
@@ -54,7 +54,7 @@ export default function HourDropdown({ label, value, onChange }: HourDropdownPro
           style={styles.pickerBtn} 
           onPress={() => setVisible(true)}
         >
-          <MaterialIcons name="unfold-more" size={24} color="#64748B" />
+          <ChevronsUpDown size={24} color="#64748B" />
         </TouchableOpacity>
       </View>
 

@@ -12,7 +12,7 @@ import {
     View,
 } from 'react-native';
 
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { ChevronLeft, Lock } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { getAuth, updatePassword } from 'firebase/auth';
 
@@ -75,7 +75,7 @@ export default function ChangePasswordScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button">
-              <Ionicons name="chevron-back" size={22} color={PRIMARY_GREEN} />
+              <ChevronLeft size={22} color={PRIMARY_GREEN} />
             </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>Change Password</Text>
             <View style={{ width: 40 }} />
@@ -92,7 +92,7 @@ export default function ChangePasswordScreen() {
           >
             <Text style={[styles.label, { color: isDark ? '#CBD5E1' : '#334155' }]}>New Password</Text>
             <View style={[styles.inputRow, { borderColor: isDark ? '#2A2A2A' : '#E2E8F0', backgroundColor: isDark ? '#121212' : '#F8FAFC' }]}>
-              <MaterialIcons name="lock-outline" size={18} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginRight: 10 }} />
+              <Lock size={18} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginRight: 10 }} />
               <TextInput
                 value={newPassword}
                 onChangeText={setNewPassword}
@@ -105,7 +105,7 @@ export default function ChangePasswordScreen() {
 
             <Text style={[styles.label, { color: isDark ? '#CBD5E1' : '#334155' }]}>Confirm Password</Text>
             <View style={[styles.inputRow, { borderColor: isDark ? '#2A2A2A' : '#E2E8F0', backgroundColor: isDark ? '#121212' : '#F8FAFC' }]}>
-              <MaterialIcons name="lock-outline" size={18} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginRight: 10 }} />
+              <Lock size={18} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginRight: 10 }} />
               <TextInput
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}

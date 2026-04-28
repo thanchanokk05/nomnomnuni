@@ -1,8 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -75,18 +71,9 @@ function AppRoot() {
 }
 
 export default function RootLayout() {
-   // Ensure icon fonts are loaded on web builds (e.g. Firebase Hosting)
-   const [fontsLoaded] = useFonts({
-     ...MaterialIcons.font,
-     ...Ionicons.font,
-     ...MaterialCommunityIcons.font,
-   });
-
    React.useEffect(() => {
-     if (fontsLoaded) void SplashScreen.hideAsync();
-   }, [fontsLoaded]);
-
-   if (!fontsLoaded) return null;
+     void SplashScreen.hideAsync();
+   }, []);
 
    return (
      <GestureHandlerRootView style={{ flex: 1 }}>

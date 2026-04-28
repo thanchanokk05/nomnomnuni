@@ -12,7 +12,7 @@ import {
     View,
 } from 'react-native';
 
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Camera, ChevronLeft, User } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { updateProfile } from 'firebase/auth';
@@ -146,7 +146,7 @@ export default function EditProfileScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button">
-            <Ionicons name="chevron-back" size={22} color={PRIMARY_GREEN} />
+            <ChevronLeft size={22} color={PRIMARY_GREEN} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Profile</Text>
           <View style={{ width: 40 }} />
@@ -158,19 +158,19 @@ export default function EditProfileScreen() {
               {previewUri ? (
                 <Image source={{ uri: previewUri }} style={styles.avatarImg} />
               ) : (
-                <MaterialIcons name="person" size={56} color="#CBD5E1" />
+                <User size={56} color="#CBD5E1" />
               )}
             </View>
 
             <TouchableOpacity onPress={onPickPhoto} style={styles.photoBtn} accessibilityRole="button">
-              <MaterialIcons name="photo-camera" size={18} color="#fff" />
+              <Camera size={18} color="#fff" />
               <Text style={styles.photoBtnText}>Change photo</Text>
             </TouchableOpacity>
           </View>
 
           <Text style={styles.label}>Display Name</Text>
           <View style={styles.inputRow}>
-            <MaterialIcons name="person-outline" size={18} color="#64748B" style={{ marginRight: 10 }} />
+            <User size={18} color="#64748B" style={{ marginRight: 10 }} />
             <TextInput
               value={displayName}
               onChangeText={setDisplayName}

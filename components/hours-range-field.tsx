@@ -1,4 +1,4 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { ChevronsUpDown, Clock } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import {
   FlatList,
@@ -93,14 +93,14 @@ export default function HoursRangeField({ open, close, onChange, step = 30 }: Pr
 function SlotButton({ label, value, onPress }: { label: string; value: string; onPress: () => void }) {
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.slot}>
-      <MaterialIcons name="access-time" size={18} color="#64748B" />
+      <Clock size={18} color="#64748B" />
       <View style={{ flex: 1 }}>
         <Text style={styles.slotLabel}>{label}</Text>
         <Text style={[styles.slotValue, !value && styles.slotPlaceholder]}>
           {value || '--:--'}
         </Text>
       </View>
-      <MaterialIcons name="unfold-more" size={20} color="#94A3B8" />
+      <ChevronsUpDown size={20} color="#94A3B8" />
     </TouchableOpacity>
   );
 }

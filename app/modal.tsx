@@ -1,4 +1,4 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { CheckCircle2, Info } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
@@ -15,7 +15,7 @@ export default function ModalScreen() {
         {/* --- Icon & Title --- */}
         <View style={styles.header}>
           <View style={styles.iconCircle}>
-            <MaterialIcons name="info-outline" size={40} color="#166534" />
+            <Info size={40} color="#166534" />
           </View>
           <ThemedText type="title" style={styles.title}>About NomNomUni</ThemedText>
           <ThemedText style={styles.version}>Version 1.0.0</ThemedText>
@@ -33,15 +33,15 @@ export default function ModalScreen() {
 
           {/* Features List */}
           <View style={styles.featureItem}>
-            <MaterialIcons name="check-circle" size={20} color="#166534" />
+            <CheckCircle2 size={20} color="#166534" />
             <ThemedText style={styles.featureText}>Smart Budget Search</ThemedText>
           </View>
           <View style={styles.featureItem}>
-            <MaterialIcons name="check-circle" size={20} color="#166534" />
+            <CheckCircle2 size={20} color="#166534" />
             <ThemedText style={styles.featureText}>Real Student Reviews</ThemedText>
           </View>
           <View style={styles.featureItem}>
-            <MaterialIcons name="check-circle" size={20} color="#166534" />
+            <CheckCircle2 size={20} color="#166534" />
             <ThemedText style={styles.featureText}>Community Driven Menus</ThemedText>
           </View>
         </View>

@@ -1,5 +1,5 @@
 import HourDropdown from '@/components/hour-dropdown';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { ClipboardCheck, Copy, Map as MapIcon, X } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -50,7 +50,7 @@ export default function AddFoodScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <MaterialIcons name="close" size={28} color="#1E293B" />
+            <X size={28} color="#1E293B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Add New Menu</Text>
           <View style={{ width: 28 }} />
@@ -94,18 +94,18 @@ export default function AddFoodScreen() {
           <View style={styles.inputGroup}>
             <View style={styles.clipboardRow}>
               <TouchableOpacity style={styles.clipboardBtn} onPress={handlePaste} activeOpacity={0.7}>
-                <MaterialIcons name="content-paste" size={16} color="#059669" />
+                <ClipboardCheck size={16} color="#059669" />
                 <Text style={[styles.clipboardText, { color: '#059669' }]}>Paste</Text>
               </TouchableOpacity>
               {location.length > 0 && (
                 <TouchableOpacity style={styles.clipboardBtn} onPress={handleCopy} activeOpacity={0.7}>
-                  <MaterialIcons name="content-copy" size={16} color="#64748B" />
+                  <Copy size={16} color="#64748B" />
                   <Text style={[styles.clipboardText, { color: '#64748B' }]}>Copy</Text>
                 </TouchableOpacity>
               )}
             </View>
             <View style={styles.locationField}>
-              <MaterialIcons name="map" size={20} color="#64748B" />
+              <MapIcon size={20} color="#64748B" />
               <TextInput
                 style={styles.locationInput}
                 placeholder="Enter shop location"

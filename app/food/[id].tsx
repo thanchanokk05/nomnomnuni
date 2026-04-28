@@ -4,7 +4,18 @@ import { useFavorites } from '@/context/favorites';
 import { useMenu } from '@/context/menu';
 import { useReview } from '@/context/ReviewContext';
 import { FOODS } from '@/data/foods';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Store,
+  X,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -151,13 +162,13 @@ export default function FoodDetail() {
               else router.replace('/(tabs)');
             }}
           >
-            <MaterialIcons name="arrow-back" size={24} color="#1E293B" />
+            <ArrowLeft size={24} color="#1E293B" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.floatingHeart} onPress={() => toggleFavorite(foodId)}>
-            <MaterialIcons
-              name={isFav ? 'favorite' : 'favorite-border'}
+            <Heart
               size={26}
               color={isFav ? '#EF4444' : '#64748B'}
+              fill={isFav ? '#EF4444' : 'none'}
             />
           </TouchableOpacity>
         </View>
@@ -179,9 +190,9 @@ export default function FoodDetail() {
           {/* Shop Information Section */}
           <Text style={styles.sectionTitle}>Shop Information</Text>
           <View style={styles.infoGrid}>
-            <InfoRow icon="storefront" label="Shop Name" value={food.shopName || 'ไม่ระบุร้าน'} />
+            <InfoRow Icon={Store} label="Shop Name" value={food.shopName || 'ไม่ระบุร้าน'} />
             <InfoRow
-              icon="place"
+              Icon={MapPin}
               label="Location"
               value={food.location || '—'}
               onPress={
@@ -192,9 +203,9 @@ export default function FoodDetail() {
                     }
                   : undefined
               }
-              trailingIcon={food.location ? 'open-in-new' : undefined}
+              TrailingIcon={food.location ? ExternalLink : undefined}
             />
-            <InfoRow icon="access-time" label="Open Hours" value={food.openHours || '08:00 - 16:00'} />
+            <InfoRow Icon={Clock} label="Open Hours" value={food.openHours || '08:00 - 16:00'} />
           </View>
 
           {food.location ? (
@@ -241,7 +252,7 @@ export default function FoodDetail() {
             })
           ) : (
             <View style={styles.emptyState}>
-              <MaterialIcons name="chat-bubble-outline" size={40} color="#CBD5E1" />
+              <MessageCircle size={40} color="#CBD5E1" />
               <Text style={styles.emptyStateText}>No reviews yet. Share your thoughts!</Text>
             </View>
           )}
@@ -255,7 +266,11 @@ export default function FoodDetail() {
           style={[styles.primaryButton, isFav && styles.activeButton]}
           onPress={() => toggleFavorite(foodId)}
         >
-          <MaterialIcons name={isFav ? 'check-circle' : 'favorite'} size={20} color="#fff" />
+          {isFav ? (
+            <CheckCircle2 size={20} color="#fff" />
+          ) : (
+            <Heart size={20} color="#fff" fill="#fff" />
+          )}
           <Text style={styles.primaryButtonText}>{isFav ? 'Saved to Favorites' : 'Add to Favorites'}</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -267,7 +282,7 @@ export default function FoodDetail() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Write a review</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <MaterialIcons name="close" size={24} color="#64748B" />
+                <X size={24} color="#64748B" />
               </TouchableOpacity>
             </View>
 
@@ -292,18 +307,30 @@ export default function FoodDetail() {
 }
 
 // Helper Component for Info Rows
-const InfoRow = ({ icon, label, value, onPress, trailingIcon }: any) => {
+const InfoRow = ({
+  Icon,
+  label,
+  value,
+  onPress,
+  TrailingIcon,
+}: {
+  Icon: LucideIcon;
+  label: string;
+  value: string;
+  onPress?: () => void;
+  TrailingIcon?: LucideIcon;
+}) => {
   const Container: any = onPress ? TouchableOpacity : View;
   return (
     <Container style={styles.infoRow} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
       <View style={styles.iconCircle}>
-        <MaterialIcons name={icon} size={18} color="#059669" />
+        <Icon size={18} color="#059669" />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.infoLabel}>{label}</Text>
         <Text style={[styles.infoValue, onPress && { color: '#059669' }]}>{value}</Text>
       </View>
-      {trailingIcon ? <MaterialIcons name={trailingIcon} size={18} color="#059669" /> : null}
+      {TrailingIcon ? <TrailingIcon size={18} color="#059669" /> : null}
     </Container>
   );
 };

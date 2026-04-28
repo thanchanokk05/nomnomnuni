@@ -1,7 +1,7 @@
 import HoursRangeField from '@/components/hours-range-field';
 import { useFavorites } from '@/context/favorites';
 import { useMenu } from '@/context/menu';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Camera, Map as MapIcon, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
@@ -154,7 +154,7 @@ export default function AddFoodScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
         <View style={[styles.header, { borderBottomColor: isDark ? '#1F2937' : '#F1F5F9' }]}>
           <TouchableOpacity onPress={() => router.back()}>
-            <MaterialIcons name="close" size={28} color={colors.text} />
+            <X size={28} color={colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Add New Menu</Text>
           <View style={{ width: 28 }} />
@@ -258,7 +258,7 @@ export default function AddFoodScreen() {
               style={[styles.mapsLinkBtn, !location.trim() && { opacity: 0.4 }]}
               activeOpacity={0.8}
             >
-              <MaterialIcons name="map" size={18} color="#059669" />
+              <MapIcon size={18} color="#059669" />
               <Text style={styles.mapsLinkText}>Open in Google Maps</Text>
             </TouchableOpacity>
           </View>
@@ -275,7 +275,7 @@ export default function AddFoodScreen() {
                 <Image source={{ uri: imageUri }} style={styles.photoPreview} resizeMode="cover" />
               ) : (
                 <View style={{ alignItems: 'center' }}>
-                  <MaterialIcons name="photo-camera" size={28} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Camera size={28} color={isDark ? '#94A3B8' : '#64748B'} />
                   <Text style={[styles.photoPickerText, { color: colors.subText }]}>Add menu photo</Text>
                 </View>
               )}

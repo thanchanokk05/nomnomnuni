@@ -1,4 +1,4 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Heart } from 'lucide-react-native';
 import React from 'react';
 import { FlatList, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
@@ -17,7 +17,7 @@ export default function FavoriteScreen() {
   const renderEmptyContainer = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.iconCircle}>
-        <MaterialIcons name="favorite-outline" size={64} color="#CBD5E1" />
+        <Heart size={64} color="#CBD5E1" />
       </View>
       <Text style={styles.emptyTitle}>No Favorites Yet</Text>
       <Text style={styles.emptySubtitle}>

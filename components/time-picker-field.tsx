@@ -1,4 +1,4 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Clock } from 'lucide-react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -30,7 +30,7 @@ export function TimePickerField({ label, value, onChange, placeholder = 'Select 
     <View style={styles.wrap}>
       {label && <Text style={styles.label}>{label}</Text>}
       <TouchableOpacity activeOpacity={0.8} onPress={() => setShow(true)} style={styles.field}>
-        <MaterialIcons name="schedule" size={20} color="#64748B" />
+        <Clock size={20} color="#64748B" />
         <Text style={[styles.valueText, !value && styles.placeholderText]}>
           {value || placeholder}
         </Text>

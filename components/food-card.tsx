@@ -1,6 +1,6 @@
 import { useFavorites } from '@/context/favorites';
 import { FOODS } from '@/data/foods';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Heart } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import React, { useMemo } from 'react';
 import {
@@ -138,7 +138,7 @@ export default function FoodCard({ item }: { item: Food }) {
         onPress={() => toggleFavorite(item.id, item.name)}
         style={styles.heartButton}
       >
-        <MaterialIcons name={fav ? 'favorite' : 'favorite-border'} size={24} color={fav ? '#15803D' : '#166534'} />
+        <Heart size={24} color={fav ? '#15803D' : '#166534'} fill={fav ? '#15803D' : 'none'} />
       </TouchableOpacity>
     </View>
   );

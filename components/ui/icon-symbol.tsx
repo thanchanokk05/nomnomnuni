@@ -1,32 +1,17 @@
-// Fallback for using MaterialIcons on Android and web.
+import { ChevronRight, Code, Heart, Home, type LucideIcon, Send, User } from 'lucide-react-native';
+import { OpaqueColorValue, type StyleProp, type ViewStyle } from 'react-native';
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
-import { ComponentProps } from 'react';
-import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
+const MAPPING: Record<string, { Icon: LucideIcon; filled?: boolean }> = {
+  'house.fill': { Icon: Home, filled: true },
+  'paperplane.fill': { Icon: Send, filled: true },
+  'chevron.left.forwardslash.chevron.right': { Icon: Code },
+  'chevron.right': { Icon: ChevronRight },
+  'heart.fill': { Icon: Heart, filled: true },
+  'person.fill': { Icon: User, filled: true },
+};
 
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
 type IconSymbolName = keyof typeof MAPPING;
 
-/**
- * Add your SF Symbols to Material Icons mappings here.
- * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
- * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
- */
-const MAPPING = {
-  'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
-  'heart.fill': 'favorite',
-  'person.fill': 'person',
-} as IconMapping;
-
-/**
- * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
- * This ensures a consistent look across platforms, and optimal resource usage.
- * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
- */
 export function IconSymbol({
   name,
   size = 24,
@@ -36,8 +21,18 @@ export function IconSymbol({
   name: IconSymbolName;
   size?: number;
   color: string | OpaqueColorValue;
-  style?: StyleProp<TextStyle>;
-  weight?: SymbolWeight;
+  style?: StyleProp<ViewStyle>;
+  weight?: unknown;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  const entry = MAPPING[name];
+  if (!entry) return null;
+  const { Icon, filled } = entry;
+  return (
+    <Icon
+      size={size}
+      color={color as string}
+      fill={filled ? (color as string) : 'none'}
+      style={style as any}
+    />
+  );
 }

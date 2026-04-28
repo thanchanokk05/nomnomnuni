@@ -1,4 +1,4 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Pencil, PlusCircle, Trash2, Utensils, X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -128,7 +128,7 @@ export default function HomeScreen() {
             <ThemedText type="subtitle">Find your best budget meal</ThemedText>
           </View>
           <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-food')}>
-            <MaterialIcons name="add-circle" size={36} color="#166534" />
+            <PlusCircle size={36} color="#166534" />
           </TouchableOpacity>
         </View>
 
@@ -169,7 +169,7 @@ export default function HomeScreen() {
             </View>
           ) : showEmpty ? (
             <View style={styles.emptyState}>
-              <MaterialIcons name="restaurant" size={44} color="#CBD5E1" />
+              <Utensils size={44} color="#CBD5E1" />
               <Text style={styles.emptyTitle}>No menus yet</Text>
               <Text style={styles.emptySubtitle}>Tap + to add your first menu.</Text>
             </View>
@@ -191,7 +191,7 @@ export default function HomeScreen() {
                           style={[styles.actionButton, styles.editButton]}
                           onPress={() => openEdit(String(item.id))}
                         >
-                          <MaterialIcons name="edit" size={20} color="#fff" />
+                          <Pencil size={20} color="#fff" />
                           <Text style={styles.actionText}>Edit</Text>
                         </TouchableOpacity>
                       </View>
@@ -205,7 +205,7 @@ export default function HomeScreen() {
                           style={[styles.actionButton, styles.deleteButton]}
                           onPress={() => typeof item.id === 'string' && deleteMenu(item.id)}
                         >
-                          <MaterialIcons name="delete" size={20} color="#fff" />
+                          <Trash2 size={20} color="#fff" />
                           <Text style={styles.actionText}>Delete</Text>
                         </TouchableOpacity>
                       </View>
@@ -244,7 +244,7 @@ export default function HomeScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Edit Menu</Text>
                 <TouchableOpacity onPress={() => setEditOpen(false)}>
-                  <MaterialIcons name="close" size={22} color="#64748B" />
+                  <X size={22} color="#64748B" />
                 </TouchableOpacity>
               </View>
 

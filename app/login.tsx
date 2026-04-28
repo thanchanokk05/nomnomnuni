@@ -1,6 +1,6 @@
 import { useUser } from '@/context/user';
 import { auth } from '@/firebase/config';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Eye, EyeOff, Lock, Mail, User, Utensils } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import React, { useState } from 'react';
@@ -107,7 +107,7 @@ export default function LoginScreen() {
         {/* Logo Section */}
         <View style={styles.logoContainer}>
           <View style={styles.logoCircle}>
-            <MaterialIcons name="restaurant" size={50} color="#166534" />
+            <Utensils size={50} color="#166534" />
           </View>
           <Text style={styles.brandTitle}>NomNomUni</Text>
           <Text style={styles.brandSubtitle}>Delicious meals within your budget</Text>
@@ -121,7 +121,7 @@ export default function LoginScreen() {
           <View style={styles.inputSection}>
             {mode === 'signup' && (
               <View style={styles.inputWrapper}>
-                <MaterialIcons name="person-outline" size={20} color="#64748B" style={styles.inputIcon} />
+                <User size={20} color="#64748B" style={styles.inputIcon} />
                 <TextInput
                   placeholder="Full Name"
                   value={name}
@@ -133,7 +133,7 @@ export default function LoginScreen() {
             )}
 
             <View style={styles.inputWrapper}>
-              <MaterialIcons name="mail-outline" size={20} color="#64748B" style={styles.inputIcon} />
+              <Mail size={20} color="#64748B" style={styles.inputIcon} />
               <TextInput
                 placeholder="Email Address"
                 value={email}
@@ -147,7 +147,7 @@ export default function LoginScreen() {
 
             <View>
               <View style={styles.inputWrapper}>
-                <MaterialIcons name="lock-outline" size={20} color="#64748B" style={styles.inputIcon} />
+                <Lock size={20} color="#64748B" style={styles.inputIcon} />
                 <TextInput
                   placeholder="Password"
                   value={password}
@@ -162,11 +162,11 @@ export default function LoginScreen() {
                   onPress={() => setShowPassword((v) => !v)}
                   style={styles.eyeButton}
                 >
-                  <MaterialIcons
-                    name={showPassword ? 'visibility-off' : 'visibility'}
-                    size={22}
-                    color="#64748B"
-                  />
+                  {showPassword ? (
+                    <EyeOff size={22} color="#64748B" />
+                  ) : (
+                    <Eye size={22} color="#64748B" />
+                  )}
                 </TouchableOpacity>
               </View>
 

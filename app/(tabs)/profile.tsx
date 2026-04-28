@@ -16,7 +16,7 @@ import { Image } from 'expo-image';
 import { useMenu } from '@/context/menu';
 import { useThemeMode } from '@/context/theme';
 import { useUser } from '@/context/user';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { ChevronRight, HelpCircle, Lock, LogOut, Pencil, SunMoon, User } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { auth } from '@/firebase/config';
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
                   cachePolicy="none"
                 />
               ) : (
-                <Ionicons name="person" size={avatarSize * 0.6} color="#CBD5E1" />
+                <User size={avatarSize * 0.6} color="#CBD5E1" />
               )}
             </View>
             <TouchableOpacity
@@ -80,7 +80,7 @@ export default function ProfileScreen() {
               accessibilityRole="button"
               onPress={() => router.push('/edit-profile' as any)}
             >
-              <MaterialIcons name="edit" size={16} color="#fff" />
+              <Pencil size={16} color="#fff" />
             </TouchableOpacity>
           </View>
 
@@ -104,29 +104,29 @@ export default function ProfileScreen() {
             <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/edit-profile' as any)}>
               <View style={styles.menuLeft}>
                 <View style={styles.menuIconBox}>
-                  <MaterialIcons name="person-outline" size={22} color={PRIMARY_GREEN} />
+                  <User size={22} color={PRIMARY_GREEN} />
                 </View>
                 <Text style={styles.menuLabel}>Edit Profile</Text>
               </View>
-              <MaterialIcons name="chevron-right" size={24} color="#CBD5E1" />
+              <ChevronRight size={24} color="#CBD5E1" />
             </TouchableOpacity>
 
             {/* Change Password */}
             <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/change-password' as any)}>
               <View style={styles.menuLeft}>
                 <View style={styles.menuIconBox}>
-                  <MaterialIcons name="lock-outline" size={22} color={PRIMARY_GREEN} />
+                  <Lock size={22} color={PRIMARY_GREEN} />
                 </View>
                 <Text style={styles.menuLabel}>Change Password</Text>
               </View>
-              <MaterialIcons name="chevron-right" size={24} color="#CBD5E1" />
+              <ChevronRight size={24} color="#CBD5E1" />
             </TouchableOpacity>
 
             {/* Theme Mode */}
             <View style={styles.menuItem}>
               <View style={styles.menuLeft}>
                 <View style={styles.menuIconBox}>
-                  <MaterialIcons name="brightness-6" size={22} color={PRIMARY_GREEN} />
+                  <SunMoon size={22} color={PRIMARY_GREEN} />
                 </View>
                 <View>
                   <Text style={styles.menuLabel}>Theme Mode</Text>
@@ -162,11 +162,11 @@ export default function ProfileScreen() {
             >
               <View style={styles.menuLeft}>
                 <View style={styles.menuIconBox}>
-                  <MaterialIcons name="help-outline" size={22} color={PRIMARY_GREEN} />
+                  <HelpCircle size={22} color={PRIMARY_GREEN} />
                 </View>
                 <Text style={[styles.menuLabel, { color: isDark ? '#E2E8F0' : '#334155' }]}>Help & Support</Text>
               </View>
-              <MaterialIcons name="chevron-right" size={24} color={isDark ? '#475569' : '#CBD5E1'} />
+              <ChevronRight size={24} color={isDark ? '#475569' : '#CBD5E1'} />
             </TouchableOpacity>
           </View>
         </View>
@@ -186,7 +186,7 @@ export default function ProfileScreen() {
             })();
           }}
         >
-          <MaterialIcons name="logout" size={20} color="#EF4444" />
+          <LogOut size={20} color="#EF4444" />
           <Text style={styles.logoutBtnText}>Sign Out</Text>
         </TouchableOpacity>
 
