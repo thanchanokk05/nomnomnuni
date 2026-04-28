@@ -49,7 +49,7 @@ export default function ModalScreen() {
         {/* --- Action Button --- */}
         <TouchableOpacity 
           style={styles.closeButton} 
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile' as any)}
         >
           <ThemedText style={styles.closeButtonText}>Understood</ThemedText>
         </TouchableOpacity>

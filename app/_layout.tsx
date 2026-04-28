@@ -61,6 +61,10 @@ function AppRoot() {
           }}
         />
 
+        {/* หน้าแก้ไข profile และเปลี่ยน password */}
+        <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
+        <Stack.Screen name="change-password" options={{ headerShown: false }} />
+
         {/* หน้า Modal อื่นๆ */}
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Info' }} />
       </Stack>

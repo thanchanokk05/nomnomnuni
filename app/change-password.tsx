@@ -56,7 +56,8 @@ export default function ChangePasswordScreen() {
       Alert.alert('Success', 'Your password has been updated.');
       setNewPassword('');
       setConfirmPassword('');
-      router.back();
+      if (router.canGoBack()) router.back();
+      else router.replace('/(tabs)/profile' as any);
     } catch (e: any) {
       const code = e?.code as string | undefined;
       let message = 'Failed to change password. Please try again.';
@@ -74,7 +75,7 @@ export default function ChangePasswordScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button">
+            <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile' as any)} style={styles.backBtn} accessibilityRole="button">
               <ChevronLeft size={22} color={PRIMARY_GREEN} />
             </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>Change Password</Text>

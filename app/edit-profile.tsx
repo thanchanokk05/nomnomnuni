@@ -106,7 +106,8 @@ export default function EditProfileScreen() {
       // Reset state and navigate BEFORE Alert. Alert.alert OK callbacks are
       // unreliable on RN Web, so don't put navigation inside one.
       setSaving(false);
-      router.back();
+      if (router.canGoBack()) router.back();
+      else router.replace('/(tabs)/profile' as any);
       Alert.alert('Saved', 'Your profile has been updated.');
       return;
     } catch (e: any) {
@@ -123,7 +124,7 @@ export default function EditProfileScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button">
+          <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile' as any)} style={styles.backBtn} accessibilityRole="button">
             <ChevronLeft size={22} color={PRIMARY_GREEN} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Profile</Text>
