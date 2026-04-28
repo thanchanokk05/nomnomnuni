@@ -18,7 +18,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 void SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  anchor: 'login',
+  anchor: 'index',
 };
 
 function AppRoot() {

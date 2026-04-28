@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // รูปเมนูอาหาร — user ที่ login แล้วอ่านได้ทุกคน, เขียนได้เฉพาะของตัวเอง
+    match /menus/{userId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // รูป profile — user อ่านได้ทุกคน, เขียนได้เฉพาะของตัวเอง
+    match /profiles/{userId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

@@ -1,7 +1,14 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  getAuth,
+  initializeAuth,
+  getReactNativePersistence,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAxHCW0stUNJkb-H7aNCDoYTS11QDybVyI",
@@ -10,16 +17,29 @@ const firebaseConfig = {
   storageBucket: "nomnomuni-97584.firebasestorage.app",
   messagingSenderId: "133034446223",
   appId: "1:133034446223:web:297b1badca58d42e168ffa",
-  measurementId: "G-J6VPM4EQ6X"
+  measurementId: "G-J6VPM4EQ6X",
 };
 
-// Initialize Firebase (safe for hot-reload)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Auth: persistent on native via AsyncStorage, on web via localStorage (default)
+let auth;
+if (Platform.OS === "web") {
+  auth = getAuth(app);
+} else {
+  try {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    });
+  } catch {
+    auth = getAuth(app); // already initialized (hot-reload)
+  }
+}
 
-// Analytics only works in browser (not SSR / React Native)
+export { auth };
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+
 isSupported().then((yes) => {
   if (yes) getAnalytics(app);
 });

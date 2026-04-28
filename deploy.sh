@@ -8,8 +8,8 @@ echo "📄 Copying landing page into dist..."
 mkdir -p dist/landing-page
 cp landing.html dist/landing-page/index.html
 
-echo "🚀 Deploying to Firebase Hosting..."
-firebase deploy --only hosting
+echo "🚀 Deploying Hosting + Firestore rules + Storage rules..."
+firebase deploy --only hosting,firestore,storage
 
 echo ""
 echo "✅ Done!"

@@ -1,15 +1,14 @@
+import { HapticTab } from '@/components/haptic-tab';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useThemeMode } from '@/context/theme';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { resolvedScheme } = useThemeMode();
   const insets = useSafeAreaInsets();
-  const isDark = colorScheme === 'dark';
+  const isDark = resolvedScheme === 'dark';
 
   // Build height from safe-area inset so we don't over- or under-pad on any
   // platform (iOS notch, Android nav bar, web zero-inset).
