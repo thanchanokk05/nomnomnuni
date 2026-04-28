@@ -4,7 +4,6 @@ import { useFavorites } from '@/context/favorites';
 import { useMenu } from '@/context/menu';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Camera, Map as MapIcon, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import {
@@ -38,9 +37,7 @@ export default function AddFoodScreen() {
   const { addMenu } = useMenu();
   const { showToast } = useFavorites();
 
-  const scheme = useColorScheme() ?? 'light';
-  const isDark = scheme === 'dark';
-  const t = Colors[scheme];
+  const t = Colors.light;
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -177,7 +174,7 @@ export default function AddFoodScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-        <View style={[styles.header, { borderBottomColor: isDark ? '#1F2937' : '#F1F5F9' }]}>
+        <View style={[styles.header, { borderBottomColor: '#F1F5F9' }]}>
           <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}>
             <X size={28} color={colors.text} />
           </TouchableOpacity>
@@ -300,7 +297,7 @@ export default function AddFoodScreen() {
                 <Image source={{ uri: imageUri }} style={styles.photoPreview} resizeMode="cover" />
               ) : (
                 <View style={{ alignItems: 'center' }}>
-                  <Camera size={28} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Camera size={28} color="#64748B" />
                   <Text style={[styles.photoPickerText, { color: colors.subText }]}>Add menu photo</Text>
                 </View>
               )}

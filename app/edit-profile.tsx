@@ -71,8 +71,6 @@ export default function EditProfileScreen() {
   }
 
   async function onSave() {
-    console.log('[edit-profile] onSave: pressed');
-
     const nextName = displayName.trim();
     if (!nextName) {
       Alert.alert('Missing', 'Display Name is required.');
@@ -86,30 +84,18 @@ export default function EditProfileScreen() {
 
     setSaving(true);
     try {
-      // ใช้ base64 data URI โดยตรง — ไม่ต้องใช้ Storage
-      const nextPhotoUrl: string | null = photoUri ?? null;
+      // บันทึกแค่ displayName ไปที่ Firebase Auth
+      // photoURL เก็บใน context เท่านั้น (base64 ยาวเกิน Firebase Auth limit)
+      await updateProfile(auth.currentUser, { displayName: nextName });
 
-      await updateProfile(auth.currentUser, {
-        displayName: nextName,
-        photoURL: nextPhotoUrl ?? undefined,
-      });
-
-      // Single source of truth — Profile screen reads from this context.
       setUser({
         name: nextName,
         email: auth.currentUser.email ?? user?.email ?? '',
-        photoURL: nextPhotoUrl ?? null,
+        photoURL: photoUri ?? null,
       });
 
-      console.log('[edit-profile] onSave: success, navigating back');
-
-      // Reset state and navigate BEFORE Alert. Alert.alert OK callbacks are
-      // unreliable on RN Web, so don't put navigation inside one.
       setSaving(false);
-      if (router.canGoBack()) router.back();
-      else router.replace('/(tabs)/profile' as any);
-      Alert.alert('Saved', 'Your profile has been updated.');
-      return;
+      router.replace('/(tabs)/profile' as any);
     } catch (e: any) {
       console.error('[edit-profile] onSave failed:', e);
       Alert.alert('Error', `Failed to update profile: ${e?.message ?? 'Please try again.'}`);

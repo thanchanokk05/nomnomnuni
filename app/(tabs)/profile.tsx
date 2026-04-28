@@ -5,7 +5,6 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -15,9 +14,8 @@ import {
 import { Image } from 'expo-image';
 
 import { useMenu } from '@/context/menu';
-import { useThemeMode } from '@/context/theme';
 import { useUser } from '@/context/user';
-import { ChevronRight, HelpCircle, Lock, LogOut, Pencil, Shield, SunMoon, User } from 'lucide-react-native';
+import { ChevronRight, HelpCircle, Lock, LogOut, Pencil, Shield, User } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { auth } from '@/firebase/config';
@@ -36,11 +34,8 @@ export default function ProfileScreen() {
   const { user, clearUser } = useUser();
   const { clearMenus } = useMenu();
   const router = useRouter();
-  const { themeMode, setThemeMode, resolvedScheme } = useThemeMode();
   const { width } = useWindowDimensions();
-  // Cap avatar size on wide screens (web/tablet) — 28% of width gets huge on desktop.
   const avatarSize = Math.min(width * 0.28, 140);
-  const isDark = resolvedScheme === 'dark';
 
   // Bump this on focus to force Image to refetch even if URL string is the same.
   const [cacheToken, setCacheToken] = React.useState(() => Date.now());
@@ -59,7 +54,7 @@ export default function ProfileScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: isDark ? '#121212' : '#F8FAFC' }]}>
+    <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* --- Header Section --- */}
@@ -97,16 +92,8 @@ export default function ProfileScreen() {
 
         {/* --- Menu List --- */}
         <View style={styles.menuContainer}>
-          <Text style={[styles.menuHeader, { color: isDark ? '#CBD5E1' : '#1E293B' }]}>Account Settings</Text>
-          <View
-            style={[
-              styles.menuCard,
-              {
-                backgroundColor: isDark ? '#1E1E1E' : '#FFF',
-                borderColor: isDark ? '#2A2A2A' : '#F1F5F9',
-              },
-            ]}
-          >
+          <Text style={styles.menuHeader}>Account Settings</Text>
+          <View style={styles.menuCard}>
             {/* Edit Profile */}
             <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/edit-profile' as any)}>
               <View style={styles.menuLeft}>
@@ -129,39 +116,13 @@ export default function ProfileScreen() {
               <ChevronRight size={24} color="#CBD5E1" />
             </TouchableOpacity>
 
-            {/* Theme Mode */}
-            <View style={styles.menuItem}>
-              <View style={styles.menuLeft}>
-                <View style={styles.menuIconBox}>
-                  <SunMoon size={22} color={PRIMARY_GREEN} />
-                </View>
-                <View>
-                  <Text style={styles.menuLabel}>Theme Mode</Text>
-                  <Text style={styles.menuSubLabel}>{themeMode === 'system' ? 'System' : themeMode === 'dark' ? 'Dark' : 'Light'}</Text>
-                </View>
-              </View>
-              <Switch
-                value={resolvedScheme === 'dark'}
-                onValueChange={(v) => setThemeMode(v ? 'dark' : 'light')}
-                trackColor={{ false: '#E2E8F0', true: '#86EFAC' }}
-                thumbColor={Platform.OS === 'android' ? (resolvedScheme === 'dark' ? PRIMARY_GREEN : '#94A3B8') : undefined}
-              />
-            </View>
           </View>
         </View>
 
         {/* --- Help & Support --- */}
         <View style={styles.menuContainer}>
-          <Text style={[styles.menuHeader, { color: isDark ? '#CBD5E1' : '#1E293B' }]}>Help & Support</Text>
-          <View
-            style={[
-              styles.menuCard,
-              {
-                backgroundColor: isDark ? '#1E1E1E' : '#FFF',
-                borderColor: isDark ? '#2A2A2A' : '#F1F5F9',
-              },
-            ]}
-          >
+          <Text style={styles.menuHeader}>Help & Support</Text>
+          <View style={styles.menuCard}>
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => router.push('/modal' as any)}
@@ -171,9 +132,9 @@ export default function ProfileScreen() {
                 <View style={styles.menuIconBox}>
                   <HelpCircle size={22} color={PRIMARY_GREEN} />
                 </View>
-                <Text style={[styles.menuLabel, { color: isDark ? '#E2E8F0' : '#334155' }]}>Help & Support</Text>
+                <Text style={styles.menuLabel}>Help & Support</Text>
               </View>
-              <ChevronRight size={24} color={isDark ? '#475569' : '#CBD5E1'} />
+              <ChevronRight size={24} color="#CBD5E1" />
             </TouchableOpacity>
 
             {/* PDPA / Privacy Policy */}
@@ -186,9 +147,9 @@ export default function ProfileScreen() {
                 <View style={styles.menuIconBox}>
                   <Shield size={22} color={PRIMARY_GREEN} />
                 </View>
-                <Text style={[styles.menuLabel, { color: isDark ? '#E2E8F0' : '#334155' }]}>Privacy Policy (PDPA)</Text>
+                <Text style={styles.menuLabel}>Privacy Policy (PDPA)</Text>
               </View>
-              <ChevronRight size={24} color={isDark ? '#475569' : '#CBD5E1'} />
+              <ChevronRight size={24} color="#CBD5E1" />
             </TouchableOpacity>
           </View>
         </View>

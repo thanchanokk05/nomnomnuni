@@ -14,16 +14,17 @@ import {
 
 import { ChevronLeft, Lock } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { getAuth, updatePassword } from 'firebase/auth';
+import { getAuth, signOut, updatePassword } from 'firebase/auth';
 
-import { useThemeMode } from '@/context/theme';
+import { useUser } from '@/context/user';
+import { useMenu } from '@/context/menu';
 
 const PRIMARY_GREEN = '#166534';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
-  const { resolvedScheme } = useThemeMode();
-  const isDark = resolvedScheme === 'dark';
+  const { clearUser } = useUser();
+  const { clearMenus } = useMenu();
 
   const [newPassword, setNewPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
@@ -53,11 +54,11 @@ export default function ChangePasswordScreen() {
     setSaving(true);
     try {
       await updatePassword(user, newPassword);
-      Alert.alert('Success', 'Your password has been updated.');
-      setNewPassword('');
-      setConfirmPassword('');
-      if (router.canGoBack()) router.back();
-      else router.replace('/(tabs)/profile' as any);
+      await signOut(auth);
+      clearMenus();
+      clearUser?.();
+      router.replace('/login');
+      Alert.alert('Password updated', 'Your password has been changed. Please sign in again.');
     } catch (e: any) {
       const code = e?.code as string | undefined;
       let message = 'Failed to change password. Please try again.';
@@ -71,49 +72,45 @@ export default function ChangePasswordScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: isDark ? '#121212' : '#F8FAFC' }]}>
+    <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile' as any)} style={styles.backBtn} accessibilityRole="button">
+            <TouchableOpacity
+              onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile' as any)}
+              style={styles.backBtn}
+              accessibilityRole="button"
+            >
               <ChevronLeft size={22} color={PRIMARY_GREEN} />
             </TouchableOpacity>
-            <Text style={[styles.headerTitle, { color: isDark ? '#FFFFFF' : '#1E293B' }]}>Change Password</Text>
+            <Text style={styles.headerTitle}>Change Password</Text>
             <View style={{ width: 40 }} />
           </View>
 
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                borderColor: isDark ? '#2A2A2A' : '#F1F5F9',
-              },
-            ]}
-          >
-            <Text style={[styles.label, { color: isDark ? '#CBD5E1' : '#334155' }]}>New Password</Text>
-            <View style={[styles.inputRow, { borderColor: isDark ? '#2A2A2A' : '#E2E8F0', backgroundColor: isDark ? '#121212' : '#F8FAFC' }]}>
-              <Lock size={18} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginRight: 10 }} />
+          <View style={styles.card}>
+            <Text style={styles.label}>New Password</Text>
+            <View style={styles.inputRow}>
+              <Lock size={18} color="#64748B" style={{ marginRight: 10 }} />
               <TextInput
                 value={newPassword}
                 onChangeText={setNewPassword}
                 placeholder="New password"
                 placeholderTextColor="#94A3B8"
                 secureTextEntry
-                style={[styles.input, { color: isDark ? '#E2E8F0' : '#0F172A' }]}
+                style={styles.input}
               />
             </View>
 
-            <Text style={[styles.label, { color: isDark ? '#CBD5E1' : '#334155' }]}>Confirm Password</Text>
-            <View style={[styles.inputRow, { borderColor: isDark ? '#2A2A2A' : '#E2E8F0', backgroundColor: isDark ? '#121212' : '#F8FAFC' }]}>
-              <Lock size={18} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginRight: 10 }} />
+            <Text style={styles.label}>Confirm Password</Text>
+            <View style={styles.inputRow}>
+              <Lock size={18} color="#64748B" style={{ marginRight: 10 }} />
               <TextInput
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 placeholder="Confirm password"
                 placeholderTextColor="#94A3B8"
                 secureTextEntry
-                style={[styles.input, { color: isDark ? '#E2E8F0' : '#0F172A' }]}
+                style={styles.input}
               />
             </View>
 
@@ -126,7 +123,7 @@ export default function ChangePasswordScreen() {
               <Text style={styles.primaryBtnText}>{saving ? 'Saving...' : 'Save Password'}</Text>
             </TouchableOpacity>
 
-            <Text style={[styles.note, { color: '#94A3B8' }]}>
+            <Text style={styles.note}>
               * If you see a "re-login required" message, please sign out and sign in again.
             </Text>
           </View>
@@ -167,31 +164,38 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
+    color: '#1E293B',
   },
   card: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: 16,
     borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   label: {
     marginTop: 10,
     marginBottom: 8,
     fontSize: 13,
     fontWeight: '800',
+    color: '#334155',
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
+    borderColor: '#E2E8F0',
     borderRadius: 16,
     paddingHorizontal: 14,
     marginBottom: 14,
+    backgroundColor: '#F8FAFC',
   },
   input: {
     flex: 1,
     height: 48,
     fontSize: 15,
     fontWeight: '600',
+    color: '#0F172A',
   },
   primaryBtn: {
     backgroundColor: PRIMARY_GREEN,
@@ -213,5 +217,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
+    color: '#94A3B8',
   },
 });
