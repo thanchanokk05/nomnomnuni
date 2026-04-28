@@ -18,6 +18,7 @@ import {
 } from 'lucide-react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Image,
@@ -25,7 +26,6 @@ import {
   Linking,
   Modal,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,

@@ -4,6 +4,7 @@ import { useFavorites } from '@/context/favorites';
 import { useMenu } from '@/context/menu';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, Map as MapIcon, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import {
@@ -13,7 +14,6 @@ import {
   KeyboardAvoidingView,
   Linking,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,

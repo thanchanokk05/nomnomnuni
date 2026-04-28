@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Linking,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +16,7 @@ import { useMenu } from '@/context/menu';
 import { useUser } from '@/context/user';
 import { ChevronRight, HelpCircle, Lock, LogOut, Pencil, Shield, User } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { auth } from '@/firebase/config';
 import { signOut } from 'firebase/auth';
