@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
+import { getAuth, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { Platform } from 'react-native';
@@ -24,6 +24,9 @@ if (Platform.OS === 'web') {
   auth = getAuth(app);
 } else {
   try {
+    // firebase v10+ ย้าย getReactNativePersistence ไปที่ subpath นี้
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getReactNativePersistence } = require('firebase/auth/react-native');
     auth = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage),
     });

@@ -2,10 +2,8 @@ import HoursRangeField from '@/components/hours-range-field';
 import { Colors } from '@/constants/theme';
 import { useFavorites } from '@/context/favorites';
 import { useMenu } from '@/context/menu';
-import { auth, storage } from '@/firebase/config';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Camera, Map as MapIcon, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
@@ -67,18 +65,6 @@ export default function AddFoodScreen() {
     setOperatingDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
   };
 
-  // อัปโหลดรูปขึ้น Firebase Storage แล้วคืน download URL (https://...)
-  // ใช้ URL นี้บันทึกใน Firestore เพื่อให้ user ทุกคนโหลดรูปได้
-  async function uploadImageToStorage(localUri: string): Promise<string> {
-    const response = await fetch(localUri);
-    const blob = await response.blob();
-    const uid = auth.currentUser?.uid ?? 'anon';
-    const filename = `menus/${uid}/${Date.now()}.jpg`;
-    const storageRef = ref(storage, filename);
-    await uploadBytes(storageRef, blob);
-    return getDownloadURL(storageRef);
-  }
-
   const handleSave = async () => {
     console.log('[add-food] handleSave: pressed');
 
@@ -100,17 +86,6 @@ export default function AddFoodScreen() {
     try {
       console.log('[add-food] handleSave: calling addMenu');
 
-      // อัปโหลดรูปก่อน (ถ้ามี) เพื่อให้ได้ URL ที่ user อื่นเปิดได้
-      let uploadedImageUri: string | null = null;
-      if (imageUri) {
-        try {
-          uploadedImageUri = await uploadImageToStorage(imageUri);
-        } catch (uploadErr) {
-          console.warn('[add-food] image upload failed, saving without image:', uploadErr);
-          // บันทึกต่อโดยไม่มีรูป แทนที่จะ throw
-        }
-      }
-
       await addMenu({
         name: name.trim(),
         price: num,
@@ -118,7 +93,7 @@ export default function AddFoodScreen() {
         openHours: openHours.trim() || undefined,
         operatingDays: operatingDays.length ? operatingDays : undefined,
         location: location.trim() || undefined,
-        imageUri: uploadedImageUri,  // ← Storage URL, ไม่ใช่ local file://
+        imageUri: imageUri ?? null,  // ← base64 data URI, แสดงได้ทุก user
         createdBy: undefined,
       });
       console.log('[add-food] handleSave: addMenu resolved');
@@ -165,11 +140,18 @@ export default function AddFoodScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 0.3,
+      base64: true,
     });
 
-    const uri = (result as any).assets?.[0]?.uri;
-    if (uri) setImageUri(uri);
+    const asset = (result as any).assets?.[0];
+    if (asset?.base64) {
+      // เก็บเป็น data URI → แสดงได้ทุก device, บันทึกใน Firestore โดยตรง (ฟรี)
+      setImageUri(`data:image/jpeg;base64,${asset.base64}`);
+    } else if (asset?.uri) {
+      // fallback ถ้า base64 ไม่ได้มาด้วย
+      setImageUri(asset.uri);
+    }
   }
 
   const openInMaps = async () => {
