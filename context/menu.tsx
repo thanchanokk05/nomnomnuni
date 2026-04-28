@@ -1,3 +1,4 @@
+import { onAuthStateChanged } from 'firebase/auth';
 import {
     addDoc,
     collection,
@@ -56,43 +57,59 @@ export function MenuProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Public real-time menus feed (all users)
+    // Subscribe to the menus feed only when a user is signed in. Firestore
+    // rules require auth, so subscribing before login would kill the listener
+    // with permission-denied and it would never recover after sign-in.
     let unsubscribeMenus: (() => void) | null = null;
 
-    setLoading(true);
-    const q = query(collection(db, 'menus'), orderBy('createdAt', 'desc'));
-    unsubscribeMenus = onSnapshot(
-      q,
-      (snap) => {
-        const items: MenuItem[] = snap.docs.map((d) => {
-          const data = d.data() as any;
-          return {
-            id: d.id,
-            userId: data.userId,
-            createdBy: data.createdBy,
-            name: data.name,
-            price: data.price,
-            shopName: data.shopName,
-            openHours: data.openHours,
-            operatingDays: Array.isArray(data.operatingDays) ? data.operatingDays : undefined,
-            location: data.location,
-            imageUri: data.imageUri ?? null,
-            createdAt: toMillis(data.createdAt),
-          };
-        });
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (unsubscribeMenus) {
+        unsubscribeMenus();
+        unsubscribeMenus = null;
+      }
 
-        setMenus(items);
-        setLoading(false);
-      },
-      () => {
-        // If listening fails, keep UI usable but empty
+      if (!user) {
         setMenus([]);
         setLoading(false);
+        return;
       }
-    );
+
+      setLoading(true);
+      const q = query(collection(db, 'menus'), orderBy('createdAt', 'desc'));
+      unsubscribeMenus = onSnapshot(
+        q,
+        (snap) => {
+          const items: MenuItem[] = snap.docs.map((d) => {
+            const data = d.data() as any;
+            return {
+              id: d.id,
+              userId: data.userId,
+              createdBy: data.createdBy,
+              name: data.name,
+              price: data.price,
+              shopName: data.shopName,
+              openHours: data.openHours,
+              operatingDays: Array.isArray(data.operatingDays) ? data.operatingDays : undefined,
+              location: data.location,
+              imageUri: data.imageUri ?? null,
+              createdAt: toMillis(data.createdAt),
+            };
+          });
+
+          setMenus(items);
+          setLoading(false);
+        },
+        (err) => {
+          console.error('[menu] onSnapshot error:', err);
+          setMenus([]);
+          setLoading(false);
+        }
+      );
+    });
 
     return () => {
       if (unsubscribeMenus) unsubscribeMenus();
+      unsubscribeAuth();
     };
   }, [clearMenus]);
 
