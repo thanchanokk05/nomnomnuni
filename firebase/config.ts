@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getAuth, initializeAuth } from 'firebase/auth';
+import { getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { Platform } from 'react-native';
 
@@ -15,21 +15,19 @@ const firebaseConfig = {
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Native: ใช้ AsyncStorage เพื่อให้ login ค้างข้ามการปิด-เปิดแอพ
-// Web: getAuth ใช้ localStorage โดยอัตโนมัติ (ค้างอยู่แล้ว)
 let auth: ReturnType<typeof getAuth>;
 if (Platform.OS === 'web') {
+  // บน web Firebase ใช้ localStorage อัตโนมัติ
   auth = getAuth(app);
 } else {
   try {
-    // firebase v10+ ย้าย getReactNativePersistence ไปที่ subpath นี้
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { getReactNativePersistence } = require('firebase/auth/react-native');
+    // Native (iOS/Android): ใช้ AsyncStorage เพื่อให้ login ค้างข้ามการปิด-เปิดแอพ
     auth = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage),
     });
   } catch {
-    auth = getAuth(app); // hot-reload: already initialized
+    // hot-reload: app already initialized
+    auth = getAuth(app);
   }
 }
 
