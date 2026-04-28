@@ -88,7 +88,7 @@ export default function FoodCard({ item }: { item: Food }) {
 
   const imageSource = item.imageUri
     ? { uri: item.imageUri }
-    : require('@/assets/images/icon.png');
+    : require('@/assets/images/app-icon.png');
 
   function handleHeartPress() {
     toggleFavorite(idStr, item.name);
