@@ -5,7 +5,6 @@ import {
   getReactNativePersistence,
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -38,7 +37,6 @@ if (Platform.OS === "web") {
 
 export { auth };
 export const db = getFirestore(app);
-export const storage = getStorage(app);
 
 isSupported().then((yes) => {
   if (yes) getAnalytics(app);
