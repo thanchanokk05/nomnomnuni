@@ -1,226 +1,327 @@
 import React from 'react';
 import {
-    Dimensions,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
-import { useFavorites } from '@/context/favorites';
-import { useUser } from '@/context/user';
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 
-const PRIMARY = '#86EFAC';
+import { useMenu } from '@/context/menu';
+import { useThemeMode } from '@/context/theme';
+import { useUser } from '@/context/user';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useFocusEffect, useRouter } from 'expo-router';
+
+import { auth } from '@/firebase/config';
+import { signOut } from 'firebase/auth';
+
+const PRIMARY_GREEN = '#166534';
 const { width } = Dimensions.get('window');
+
+// Append a timestamp query so the Image component re-fetches even when the
+// underlying URL string is unchanged (Storage URLs are stable per path).
+function withCacheBust(url: string | null | undefined, token: number): string | null {
+  if (!url) return null;
+  return `${url}${url.includes('?') ? '&' : '?'}cb=${token}`;
+}
 
 export default function ProfileScreen() {
   const { user, clearUser } = useUser();
-  const { favorites } = useFavorites();
+  const { clearMenus } = useMenu();
   const router = useRouter();
+  const { themeMode, setThemeMode, resolvedScheme } = useThemeMode();
+  const avatarSize = width * 0.28;
+  const isDark = resolvedScheme === 'dark';
 
-  const stats = [
-    { id: 'fav', label: 'Favorites', value: favorites.length },
-    { id: 'reviews', label: 'Reviews', value: 4 },
-  ];
+  // Bump this on focus to force Image to refetch even if URL string is the same.
+  const [cacheToken, setCacheToken] = React.useState(() => Date.now());
 
-  const menu = [
-    'My Favorites',
-    'Notifications',
-    'Settings',
-    'Help & Support',
-  ];
+  // Single source of truth: read photoURL from context. Fall back to auth
+  // only when context has nothing yet (first render before login propagates).
+  const rawPhotoURL = user?.photoURL ?? auth.currentUser?.photoURL ?? null;
+  const photoURL = withCacheBust(rawPhotoURL, cacheToken);
 
-  const avatarSize = Math.min(140, width * 0.35);
+  // Force a fresh cache token every time the user navigates back here. This
+  // guarantees a freshly-uploaded avatar shows up even if the URL is stable.
+  useFocusEffect(
+    React.useCallback(() => {
+      setCacheToken(Date.now());
+    }, [])
+  );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: isDark ? '#121212' : '#F8FAFC' }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.top}>
-          <View style={styles.headerCard}>
-            <View style={[styles.avatar, { justifyContent: 'center', alignItems: 'center' }]}>
-              <Ionicons name="person-circle" size={avatarSize} color="#DDD" />
+
+        {/* --- Header Section --- */}
+        <View style={styles.headerSection}>
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarCircle}>
+              {photoURL ? (
+                <Image
+                  source={{ uri: photoURL }}
+                  style={styles.avatarImg}
+                  contentFit="cover"
+                  cachePolicy="none"
+                />
+              ) : (
+                <Ionicons name="person" size={avatarSize * 0.6} color="#CBD5E1" />
+              )}
             </View>
-            <Text style={styles.name}>{user?.name ?? 'Guest'}</Text>
-            <Text style={styles.email}>{user?.email ?? 'guest@email.com'}</Text>
+            <TouchableOpacity
+              style={styles.editBadge}
+              accessibilityRole="button"
+              onPress={() => router.push('/edit-profile' as any)}
+            >
+              <MaterialIcons name="edit" size={16} color="#fff" />
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.statsCard}>
-            {stats.map((s) => (
-              <View key={s.id} style={styles.statItem}>
-                <View style={styles.iconWrap}>
-                  {s.id === 'fav' && <Ionicons name="heart" size={22} color={PRIMARY} />}
-                  {s.id === 'reviews' && <FontAwesome name="star" size={20} color={PRIMARY} />}
-                </View>
-                <Text style={styles.statValue}>{s.value}</Text>
-                <Text style={styles.statLabel}>{s.label}</Text>
-              </View>
-            ))}
-          </View>
+          <Text style={styles.userName}>{user?.name ?? 'Student User'}</Text>
+          <Text style={styles.userEmail}>{user?.email ?? 'student@university.ac.th'}</Text>
         </View>
 
-        <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <View style={styles.menuCard}>
-            {menu.map((m) => (
-              <TouchableOpacity key={m} style={styles.menuItem} accessibilityRole="button">
-                <Text style={styles.menuText}>{m}</Text>
-                <Ionicons name="chevron-forward" size={18} color="#BBB" />
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.bottom}>
-          <TouchableOpacity
-            style={styles.logoutButton}
-            accessibilityRole="button"
-            onPress={() => {
-              clearUser();
-              router.replace('/login');
-            }}
+        {/* --- Menu List --- */}
+        <View style={styles.menuContainer}>
+          <Text style={[styles.menuHeader, { color: isDark ? '#CBD5E1' : '#1E293B' }]}>Account Settings</Text>
+          <View
+            style={[
+              styles.menuCard,
+              {
+                backgroundColor: isDark ? '#1E1E1E' : '#FFF',
+                borderColor: isDark ? '#2A2A2A' : '#F1F5F9',
+              },
+            ]}
           >
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+            {/* Edit Profile */}
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/edit-profile' as any)}>
+              <View style={styles.menuLeft}>
+                <View style={styles.menuIconBox}>
+                  <MaterialIcons name="person-outline" size={22} color={PRIMARY_GREEN} />
+                </View>
+                <Text style={styles.menuLabel}>Edit Profile</Text>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color="#CBD5E1" />
+            </TouchableOpacity>
+
+            {/* Change Password */}
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/change-password' as any)}>
+              <View style={styles.menuLeft}>
+                <View style={styles.menuIconBox}>
+                  <MaterialIcons name="lock-outline" size={22} color={PRIMARY_GREEN} />
+                </View>
+                <Text style={styles.menuLabel}>Change Password</Text>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color="#CBD5E1" />
+            </TouchableOpacity>
+
+            {/* Theme Mode */}
+            <View style={styles.menuItem}>
+              <View style={styles.menuLeft}>
+                <View style={styles.menuIconBox}>
+                  <MaterialIcons name="brightness-6" size={22} color={PRIMARY_GREEN} />
+                </View>
+                <View>
+                  <Text style={styles.menuLabel}>Theme Mode</Text>
+                  <Text style={styles.menuSubLabel}>{themeMode === 'system' ? 'System' : themeMode === 'dark' ? 'Dark' : 'Light'}</Text>
+                </View>
+              </View>
+              <Switch
+                value={resolvedScheme === 'dark'}
+                onValueChange={(v) => setThemeMode(v ? 'dark' : 'light')}
+                trackColor={{ false: '#E2E8F0', true: '#86EFAC' }}
+                thumbColor={Platform.OS === 'android' ? (resolvedScheme === 'dark' ? PRIMARY_GREEN : '#94A3B8') : undefined}
+              />
+            </View>
+          </View>
         </View>
+
+        {/* --- Help & Support --- */}
+        <View style={styles.menuContainer}>
+          <Text style={[styles.menuHeader, { color: isDark ? '#CBD5E1' : '#1E293B' }]}>Help & Support</Text>
+          <View
+            style={[
+              styles.menuCard,
+              {
+                backgroundColor: isDark ? '#1E1E1E' : '#FFF',
+                borderColor: isDark ? '#2A2A2A' : '#F1F5F9',
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={[styles.menuItem, { borderBottomWidth: 0 }]}
+              onPress={() => router.push('/modal' as any)}
+              accessibilityRole="button"
+            >
+              <View style={styles.menuLeft}>
+                <View style={styles.menuIconBox}>
+                  <MaterialIcons name="help-outline" size={22} color={PRIMARY_GREEN} />
+                </View>
+                <Text style={[styles.menuLabel, { color: isDark ? '#E2E8F0' : '#334155' }]}>Help & Support</Text>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color={isDark ? '#475569' : '#CBD5E1'} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* --- Logout Section (separate) --- */}
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          onPress={() => {
+            (async () => {
+              try {
+                await signOut(auth);
+              } finally {
+                clearMenus();
+                clearUser?.();
+                router.replace('/login');
+              }
+            })();
+          }}
+        >
+          <MaterialIcons name="logout" size={20} color="#EF4444" />
+          <Text style={styles.logoutBtnText}>Sign Out</Text>
+        </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const CARD_RADIUS = 20;
-const GAP = 16;
-
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#F8FAFC',
   },
   scroll: {
-    padding: GAP,
-    paddingBottom: 32,
-    flexGrow: 1,
-    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
   },
-  top: {
-    marginBottom: 12,
-  },
-  headerCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: CARD_RADIUS,
-    padding: 20,
+  headerSection: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
+    marginBottom: 30,
+  },
+  avatarWrapper: {
+    position: 'relative',
     marginBottom: 16,
   },
-  avatar: {
-    width: Math.min(140, width * 0.35),
-    height: Math.min(140, width * 0.35),
-    borderRadius: Math.min(140, width * 0.35) / 2,
-    backgroundColor: '#EEE',
-    marginBottom: 14,
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2D2D2D',
-  },
-  email: {
-    marginTop: 6,
-    fontSize: 14,
-    color: '#666',
-  },
-
-  statsCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  statItem: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 8,
+  avatarCircle: {
+    width: width * 0.28,
+    height: width * 0.28,
+    borderRadius: (width * 0.28) / 2,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+    borderWidth: 4,
+    borderColor: '#FFF',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 },
+      android: { elevation: 8 },
+    }),
   },
-  iconWrap: {
-    marginBottom: 8,
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: (width * 0.28) / 2,
   },
-  statValue: {
-    fontSize: 18,
+  editBadge: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: PRIMARY_GREEN,
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: '#F8FAFC',
+  },
+  userName: {
+    fontSize: 24,
     fontWeight: '800',
-    color: '#2D2D2D',
+    color: '#1E293B',
   },
-  statLabel: {
-    marginTop: 6,
-    fontSize: 12,
-    color: '#777',
+  userEmail: {
+    fontSize: 14,
+    color: '#64748B',
+    marginTop: 4,
   },
-
-  menuSection: {
-    marginTop: 18,
+  menuContainer: {
+    marginBottom: 30,
   },
-  sectionTitle: {
+  menuHeader: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#2D2D2D',
-    marginBottom: 10,
+    color: '#1E293B',
+    marginBottom: 12,
+    marginLeft: 4,
   },
   menuCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: CARD_RADIUS,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomColor: '#F0F0F0',
-    borderBottomWidth: 1,
-  },
-  menuText: {
-    fontSize: 15,
-    color: '#2D2D2D',
-    fontWeight: '600',
-  },
-  chevron: {
-    fontSize: 20,
-    color: '#BBB',
-  },
-
-  bottom: {
-    marginTop: 18,
-  },
-  logoutButton: {
-    backgroundColor: '#DC2626',
     paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  menuLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  menuIconBox: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#F0FDF4',
     borderRadius: 12,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  logoutText: {
-    color: '#fff',
+  menuLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  menuSubLabel: {
+    marginTop: 3,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#94A3B8',
+  },
+  dangerIconBox: {
+    backgroundColor: '#FEF2F2',
+  },
+  dangerText: {
+    color: '#B91C1C',
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 20,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+  },
+  logoutBtnText: {
+    color: '#EF4444',
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: 16,
   },
 });

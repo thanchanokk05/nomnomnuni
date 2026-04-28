@@ -1,45 +1,124 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 import FoodCard from '@/components/food-card';
-import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useFavorites } from '@/context/favorites';
 import { FOODS } from '@/data/foods';
 
 export default function FavoriteScreen() {
   const { favorites } = useFavorites();
+  
+  // กรองรายการอาหารที่ถูกเลือกเป็น Favorite
   const items = FOODS.filter((f) => favorites.includes(f.id));
 
-  return (
-    <ThemedView style={{ flex: 1 }}>
-      <ThemedText type="title">Favorite</ThemedText>
+  // ส่วนแสดงผลเมื่อไม่มีข้อมูล (Empty State)
+  const renderEmptyContainer = () => (
+    <View style={styles.emptyContainer}>
+      <View style={styles.iconCircle}>
+        <MaterialIcons name="favorite-outline" size={64} color="#CBD5E1" />
+      </View>
+      <Text style={styles.emptyTitle}>No Favorites Yet</Text>
+      <Text style={styles.emptySubtitle}>
+        Explore the menu and tap the heart icon to save your favorite dishes here.
+      </Text>
+    </View>
+  );
 
-      {items.length === 0 ? (
-        <View style={styles.container}>
-          <Text style={styles.empty}>No favorite food yet.</Text>
+  return (
+    <ThemedView style={styles.mainContainer}>
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>My Favorites</Text>
+          <View style={styles.countBadge}>
+            <Text style={styles.countText}>{items.length} Items</Text>
+          </View>
         </View>
-      ) : (
+
         <FlatList
           data={items}
           keyExtractor={(i) => String(i.id)}
-          renderItem={({ item }) => <FoodCard item={item} />}
-          style={{ marginTop: 12 }}
+          renderItem={({ item }) => (
+            <View style={styles.cardWrapper}>
+              <FoodCard item={item} />
+            </View>
+          )}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={renderEmptyContainer}
+          showsVerticalScrollIndicator={false}
         />
-      )}
+      </SafeAreaView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#F8FAFC', // ใช้สีเดียวกับหน้า Food Detail
   },
-  empty: {
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+  },
+  countBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  countText: {
     color: '#166534',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  listContent: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 40,
+    flexGrow: 1, // สำคัญ: เพื่อให้ ListEmptyComponent อยู่กลางจอ
+  },
+  cardWrapper: {
+    marginBottom: 16, // เพิ่มระยะห่างระหว่างการ์ด
+  },
+  // Empty State Styles
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  iconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#64748B',
     textAlign: 'center',
-    marginTop: 40,
+    lineHeight: 20,
   },
 });

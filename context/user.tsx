@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
-type User = { name: string; email: string } | null;
+type User = { name: string; email: string; photoURL?: string | null } | null;
 
 type UserContextType = {
   user: User;

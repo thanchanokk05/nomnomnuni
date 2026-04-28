@@ -1,340 +1,559 @@
+import RestaurantMap from '@/components/restaurant-map';
 import { ThemedView } from '@/components/themed-view';
 import { useFavorites } from '@/context/favorites';
+import { useMenu } from '@/context/menu';
 import { useReview } from '@/context/ReviewContext';
 import { FOODS } from '@/data/foods';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useLocalSearchParams } from 'expo-router';
-import React from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Linking,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+function googleMapsSearchUrl(query: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
 
 export default function FoodDetail() {
-  const params = useLocalSearchParams();
-  const id = Number(params.id);
-  const item = FOODS.find((f) => f.id === id);
+  const router = useRouter();
+  const { id } = useLocalSearchParams();
+  const { menus } = useMenu();
+
+  const routeId = Array.isArray(id) ? id[0] : id;
+  const numericId = routeId ? Number(routeId) : NaN;
+
+  // Menus from Firestore use string doc ids, FOODS uses numeric ids.
+  const menuItem = useMemo(() => {
+    if (!routeId) return undefined;
+    return menus.find((m) => m.id === routeId);
+  }, [menus, routeId]);
+
+  const staticItem = useMemo(() => {
+    if (!Number.isFinite(numericId)) return undefined;
+    return FOODS.find((f) => f.id === numericId);
+  }, [numericId]);
+
+  const food = menuItem
+    ? {
+        id: menuItem.id,
+        name: menuItem.name,
+        price: menuItem.price,
+        shopName: menuItem.shopName,
+        openHours: menuItem.openHours,
+        location: menuItem.location,
+        imageUri: menuItem.imageUri,
+        createdAt: menuItem.createdAt,
+      }
+    : staticItem
+      ? {
+          id: staticItem.id,
+          name: staticItem.name,
+          price: staticItem.price,
+          shopName: 'ไม่ระบุร้าน',
+          openHours: '08:00 - 16:00',
+          location: '—',
+          imageUri: null as string | null,
+          createdAt: Date.now(),
+        }
+      : null;
+
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { addReview, getReviewsByFood, getAuthorProfile } = useReview();
 
-  if (!item) return null;
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newComment, setNewComment] = useState('');
 
-  const fav = isFavorite(item.id);
-
-  // Local reviews UI state + global reviews from context
-  const [reviewsLocal, setReviewsLocal] = React.useState<Array<{ rating: number; comment: string }>>([
-    { rating: 4, comment: 'Delicious — student priced' },
-  ]);
-  const [modalVisible, setModalVisible] = React.useState(false);
-  const [newRating, setNewRating] = React.useState<number>(5);
-  const [newComment, setNewComment] = React.useState<string>('');
-  const { addReview, getReviewsByFood } = useReview();
-  const globalReviews = item ? getReviewsByFood(item.id) : [];
-
-  function handleSubmitReview() {
-    if (!newComment.trim()) return;
-    const review = { rating: newRating, comment: newComment.trim() };
-    // push to local UI array (optional) and push to global context
-    setReviewsLocal((prev) => [review, ...prev]);
-    if (item) {
-      addReview(item.id, newComment.trim());
-    }
-    setNewComment('');
-    setNewRating(5);
-    setModalVisible(false);
+  if (!food) {
+    return (
+      <ThemedView style={[styles.mainContainer, { justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
+        <Text style={{ color: '#334155', fontWeight: '700', fontSize: 16 }}>ไม่พบข้อมูลอาหาร</Text>
+      </ThemedView>
+    );
   }
 
+  // Reviews & favorites currently key off a numeric foodId.
+  // For Firestore menus (string ids), derive a stable numeric key from createdAt.
+  const foodId: number = typeof food.id === 'number' ? food.id : food.createdAt;
+
+  const isFav = isFavorite(foodId);
+  const reviews = getReviewsByFood(foodId);
+
+  // Resolve author profiles for reviews that have userId
+  const [authorProfiles, setAuthorProfiles] = useState<
+    Record<string, { displayName: string; photoURL: string | null }>
+  >({});
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      const ids = Array.from(new Set(reviews.map((r: any) => r.userId).filter(Boolean))) as string[];
+      if (!ids.length) return;
+
+      const entries = await Promise.all(
+        ids.map(async (uid) => {
+          const profile = await getAuthorProfile(uid);
+          return [uid, profile] as const;
+        })
+      );
+
+      if (!alive) return;
+      setAuthorProfiles((prev) => {
+        const next = { ...prev };
+        for (const [uid, profile] of entries) next[uid] = profile;
+        return next;
+      });
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [reviews, getAuthorProfile]);
+
+  const handleSubmitReview = () => {
+    if (!newComment.trim()) return;
+    addReview(foodId, newComment.trim());
+    setNewComment('');
+    setModalVisible(false);
+  };
+
   return (
-    <ThemedView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        <Image source={require('@/assets/images/icon.png')} style={styles.image} />
-        <View style={styles.info}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.price}>{item.price} baht</Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.heart}
-          onPress={() => toggleFavorite(item.id)}
-          accessibilityLabel={fav ? 'Remove from favorites' : 'Add to favorites'}
-          accessibilityState={{ selected: fav }}>
-          <MaterialIcons name={fav ? 'favorite' : 'favorite-border'} size={28} color={fav ? '#86EFAC' : '#14532D'} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.addButton} onPress={() => toggleFavorite(item.id)}>
-          <Text style={styles.addButtonText}>{fav ? 'Remove from Favorite' : 'Add to Favorite'}</Text>
-        </TouchableOpacity>
-
-        {/* Shop Information Card */}
-        <View style={styles.shopCard}>
-          <Text style={styles.shopSectionTitle}>Shop information</Text>
-
-          <View style={styles.shopRow}>
-            <Text style={styles.shopLabel}>🏪 Shop name</Text>
-            <Text style={styles.shopValue}>อาหารตามสั่ง</Text>
-          </View>
-
-          <View style={styles.shopRow}>
-            <Text style={styles.shopLabel}>📍 Zone</Text>
-            <Text style={styles.shopValue}>โรงอาหารE1</Text>
-          </View>
-
-          <View style={styles.shopRow}>
-            <Text style={styles.shopLabel}>⏰ Opening hours</Text>
-            <Text style={styles.shopValue}>08:00 – 16:00 น.</Text>
-          </View>
-
-          <Text style={[styles.shopSectionTitle, { marginTop: 12 }]}>⭐ Reviews</Text>
-
-          <View style={styles.ratingRow}>
-            <View style={styles.starsRow}>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <MaterialIcons
-                  key={i}
-                  name={i < 4 ? 'star' : 'star-border'}
-                  size={16}
-                  color={i < 4 ? '#23974eff' : '#CCCCCC'}
-                  style={{ marginRight: 4 }}
-                />
-              ))}
-            </View>
-            <Text style={styles.ratingText}>4.2/5 <Text style={styles.reviewCount}>(128 reviews)</Text></Text>
-          </View>
-
-          <View style={styles.reviews}>
-            {globalReviews.map((r) => (
-              <Text key={r.id} style={styles.reviewItem}>💬 "{r.comment}"</Text>
-            ))}
-          </View>
-
-          <TouchableOpacity style={styles.writeButton} onPress={() => setModalVisible(true)}>
-            <Text style={styles.writeButtonText}>Write Review</Text>
+    <ThemedView style={styles.mainContainer}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* --- Header Image & Back Button --- */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={food.imageUri ? { uri: food.imageUri } : require('@/assets/images/icon.png')}
+            style={styles.mainImage}
+          />
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => {
+              if (router.canGoBack()) router.back();
+              else router.replace('/(tabs)');
+            }}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="#1E293B" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.floatingHeart} onPress={() => toggleFavorite(foodId)}>
+            <MaterialIcons
+              name={isFav ? 'favorite' : 'favorite-border'}
+              size={26}
+              color={isFav ? '#EF4444' : '#64748B'}
+            />
           </TouchableOpacity>
         </View>
 
+        {/* --- Content Area --- */}
+        <View style={styles.contentCard}>
+          <View style={styles.headerRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.foodName}>{food.name}</Text>
+              <Text style={styles.foodPrice}>฿{food.price}</Text>
+            </View>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusText}>Open Now</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Shop Information Section */}
+          <Text style={styles.sectionTitle}>Shop Information</Text>
+          <View style={styles.infoGrid}>
+            <InfoRow icon="storefront" label="Shop Name" value={food.shopName || 'ไม่ระบุร้าน'} />
+            <InfoRow
+              icon="place"
+              label="Location"
+              value={food.location || '—'}
+              onPress={
+                food.location
+                  ? () => {
+                      const q = food.shopName ? `${food.shopName} ${food.location}` : food.location!;
+                      Linking.openURL(googleMapsSearchUrl(q)).catch(() => {});
+                    }
+                  : undefined
+              }
+              trailingIcon={food.location ? 'open-in-new' : undefined}
+            />
+            <InfoRow icon="access-time" label="Open Hours" value={food.openHours || '08:00 - 16:00'} />
+          </View>
+
+          {food.location ? (
+            <View style={{ marginBottom: 24 }}>
+              <Text style={styles.sectionTitle}>On the Map</Text>
+              <RestaurantMap
+                query={food.shopName ? `${food.shopName} ${food.location}` : food.location}
+              />
+            </View>
+          ) : null}
+
+          {/* Reviews Section */}
+          <View style={styles.reviewHeaderRow}>
+            <Text style={styles.sectionTitle}>Community Reviews</Text>
+            <TouchableOpacity onPress={() => setModalVisible(true)}>
+              <Text style={styles.addReviewLink}>Write Review</Text>
+            </TouchableOpacity>
+          </View>
+
+          {reviews.length > 0 ? (
+            reviews.map((r: any) => {
+              const resolved = r.userId ? authorProfiles[r.userId] : undefined;
+              const displayName =
+                resolved?.displayName ??
+                r.displayName ??
+                'Anonymous';
+              const photoURL: string | null =
+                resolved?.photoURL ??
+                (r.photoURL ?? null);
+
+              return (
+                <View key={r.id} style={styles.reviewCard}>
+                  <View style={styles.reviewUserRow}>
+                    {photoURL ? (
+                      <ExpoImage source={{ uri: photoURL }} style={styles.reviewAvatarImg} contentFit="cover" />
+                    ) : (
+                      <View style={styles.avatarPlaceholder} />
+                    )}
+                    <Text style={styles.reviewUser}>{displayName}</Text>
+                  </View>
+                  <Text style={styles.reviewText}>{r.comment}</Text>
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialIcons name="chat-bubble-outline" size={40} color="#CBD5E1" />
+              <Text style={styles.emptyStateText}>No reviews yet. Share your thoughts!</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
 
-      {/* Review Modal (keeps modal outside scroll) */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Write a review</Text>
+      {/* --- Sticky Footer Action --- */}
+      <SafeAreaView style={styles.footer}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={[styles.primaryButton, isFav && styles.activeButton]}
+          onPress={() => toggleFavorite(foodId)}
+        >
+          <MaterialIcons name={isFav ? 'check-circle' : 'favorite'} size={20} color="#fff" />
+          <Text style={styles.primaryButtonText}>{isFav ? 'Saved to Favorites' : 'Add to Favorites'}</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
 
-            <View style={styles.starPicker}>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <TouchableOpacity key={i} onPress={() => setNewRating(i + 1)}>
-                  <MaterialIcons
-                    name={i < newRating ? 'star' : 'star-border'}
-                    size={28}
-                    color={i < newRating ? '#22C55E' : '#CCCCCC'}
-                    style={{ marginHorizontal: 6 }}
-                  />
-                </TouchableOpacity>
-              ))}
+      {/* --- Review Modal --- */}
+      <Modal visible={modalVisible} animationType="slide" transparent>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Write a review</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <MaterialIcons name="close" size={24} color="#64748B" />
+              </TouchableOpacity>
             </View>
 
             <TextInput
+              style={styles.modalInput}
+              placeholder="Share your thoughts..."
+              placeholderTextColor="#94A3B8"
+              multiline
+              numberOfLines={4}
               value={newComment}
               onChangeText={setNewComment}
-              placeholder="Write your comment..."
-              multiline
-              style={styles.commentInput}
             />
 
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.submitButton} onPress={handleSubmitReview}>
-                <Text style={styles.submitButtonText}>Send</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.submitButton} onPress={handleSubmitReview}>
+              <Text style={styles.submitButtonText}>Post Review</Text>
+            </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
-
     </ThemedView>
   );
 }
 
+// Helper Component for Info Rows
+const InfoRow = ({ icon, label, value, onPress, trailingIcon }: any) => {
+  const Container: any = onPress ? TouchableOpacity : View;
+  return (
+    <Container style={styles.infoRow} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
+      <View style={styles.iconCircle}>
+        <MaterialIcons name={icon} size={18} color="#059669" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={[styles.infoValue, onPress && { color: '#059669' }]}>{value}</Text>
+      </View>
+      {trailingIcon ? <MaterialIcons name={trailingIcon} size={18} color="#059669" /> : null}
+    </Container>
+  );
+};
+
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#F0FDF4',
-    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
   },
-  image: {
-    width: 260,
-    height: 260,
-    borderRadius: 16,
-    marginTop: 20,
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 120,
+  },
+  // Image Section
+  imageContainer: {
+    width: '100%',
+    height: 380,
+    position: 'relative',
+  },
+  mainImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    padding: 8,
+    borderRadius: 12,
+  },
+  floatingHeart: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
     backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 50,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
-  info: {
-    marginTop: 20,
+  // Content Card
+  contentCard: {
+    marginTop: -30,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 24,
+  },
+  headerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  name: {
+  foodName: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#2D2D2D',
+    color: '#0F172A',
+    letterSpacing: -0.5,
   },
-  price: {
+  foodPrice: {
+    fontSize: 20,
+    color: '#059669',
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  statusBadge: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  statusText: {
+    color: '#059669',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 20,
+  },
+  sectionTitle: {
     fontSize: 18,
-    marginTop: 8,
-    color: '#2D2D2D',
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 16,
   },
-  heart: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  // Info Items
+  infoGrid: {
+    gap: 16,
+    marginBottom: 24,
+  },
+  infoRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 12,
   },
-  addButton: {
-    marginTop: 30,
-    backgroundColor: '#166534',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 20,
+  iconCircle: {
+    backgroundColor: '#F0FDF4',
+    padding: 8,
+    borderRadius: 10,
   },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: '700',
+  infoLabel: {
+    fontSize: 12,
+    color: '#94A3B8',
+    textTransform: 'uppercase',
   },
-
-  /* New shop card styles */
-  shopCard: {
-    width: '100%',
-    backgroundColor: '#DCFCE7',
-    borderRadius: 20,
-    padding: 16,
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
+  infoValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#334155',
   },
-  shopSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#2D2D2D',
-    marginBottom: 8,
-  },
-  shopRow: {
+  // Reviews
+  reviewHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 6,
   },
-  shopLabel: {
-    color: '#777777',
-    fontWeight: '600',
-  },
-  shopValue: {
-    color: '#2D2D2D',
+  addReviewLink: {
+    color: '#059669',
     fontWeight: '700',
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  starsRow: {
-    flexDirection: 'row',
-    marginRight: 8,
-  },
-  ratingText: {
-    color: '#166534',
-    fontWeight: '700',
-  },
-  reviewCount: {
-    color: '#166534',
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  reviews: {
-    marginTop: 12,
-  },
-  reviewItem: {
-    color: '#166534',
-    backgroundColor: '#F0FDF4',
-    padding: 10,
-    borderRadius: 12,
-    marginTop: 8,
     fontSize: 14,
   },
-  writeButton: {
+  reviewCard: {
+    backgroundColor: '#F8FAFC',
+    padding: 16,
+    borderRadius: 16,
     marginTop: 12,
-    backgroundColor: '#22C55E',
-    paddingVertical: 10,
-    borderRadius: 20,
-    alignItems: 'center',
   },
-  writeButtonText: {
+  reviewUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  avatarPlaceholder: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#CBD5E1',
+  },
+  reviewAvatarImg: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#CBD5E1',
+  },
+  reviewUser: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  reviewText: {
+    fontSize: 14,
+    color: '#475569',
+    lineHeight: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: 30,
+  },
+  emptyStateText: {
+    marginTop: 10,
+    color: '#94A3B8',
+    fontSize: 14,
+  },
+  // Footer
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  primaryButton: {
+    backgroundColor: '#059669',
+    height: 56,
+    borderRadius: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    shadowColor: '#059669',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  activeButton: {
+    backgroundColor: '#1E293B',
+  },
+  primaryButtonText: {
     color: '#fff',
+    fontSize: 16,
     fontWeight: '700',
   },
-
-  /* Modal styles */
+  // Modal Style
   modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'flex-end',
   },
-  modalContainer: {
-    width: '90%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     padding: 24,
-    elevation: 5,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2D2D2D',
-    marginBottom: 16,
-  },
-  starPicker: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  commentInput: {
-    minHeight: 60,
-    borderColor: '#CCCCCC',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 16,
-    color: '#2D2D2D',
-  },
-  modalButtons: {
+  modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  modalInput: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 16,
+    height: 120,
+    fontSize: 16,
+    color: '#1E293B',
+    textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 24,
   },
   submitButton: {
-    flex: 1,
-    backgroundColor: '#22C55E',
-    paddingVertical: 12,
-    borderRadius: 20,
+    backgroundColor: '#059669',
+    height: 56,
+    borderRadius: 18,
     alignItems: 'center',
-    marginRight: 8,
+    justifyContent: 'center',
   },
   submitButtonText: {
     color: '#fff',
-    fontWeight: '700',
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#DCFCE7',
-    paddingVertical: 12,
-    borderRadius: 20,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#166534',
+    fontSize: 16,
     fontWeight: '700',
   },
 });

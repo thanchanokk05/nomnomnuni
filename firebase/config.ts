@@ -1,5 +1,7 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Project Firebase config (copied from src/firebase.js)
 const firebaseConfig = {
@@ -17,3 +19,9 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Export auth instance for use in the app
 export const auth = getAuth(app);
+
+// Export firestore for persistence (menus, profiles, etc.)
+export const db = getFirestore(app);
+
+// Export storage for uploads (e.g. profile photos)
+export const storage = getStorage(app);

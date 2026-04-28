@@ -1,18 +1,20 @@
 import { useUser } from '@/context/user';
 import { auth } from '@/firebase/config';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import React, { useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 export default function LoginScreen() {
@@ -23,45 +25,74 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function onLogin() {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Validation', 'Please enter email and password.');
-      return;
-    }
+    const normalizedEmail = email.trim();
+    const rawPassword = password;
+
+    if (!normalizedEmail || !rawPassword.trim()) return;
+
     setLoading(true);
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const user = result.user;
-      setUser({ name: user.displayName ?? '', email: user.email ?? email });
+      const cred = await signInWithEmailAndPassword(auth, normalizedEmail, rawPassword);
+      const displayName = cred.user.displayName || '';
+      const photoURL = cred.user.photoURL || null;
+
+      // restore user to global state so app can use it
+      setUser({ name: displayName, email: normalizedEmail, photoURL });
       router.replace('/(tabs)');
-    } catch (err: any) {
-      Alert.alert('Login failed', `${err.code ?? ''} ${err.message ?? 'Unable to login'}`);
+    } catch (e: any) {
+      const code = e?.code as string | undefined;
+
+      let msg = 'Sign in failed. Please try again.';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') msg = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+      if (code === 'auth/user-not-found') msg = 'ไม่พบบัญชีผู้ใช้นี้';
+      if (code === 'auth/invalid-email') msg = 'อีเมลไม่ถูกต้อง';
+      if (code === 'auth/too-many-requests') msg = 'ลองใหม่ภายหลัง (พยายามหลายครั้งเกินไป)';
+
+      // eslint-disable-next-line no-alert
+      alert(msg);
     } finally {
       setLoading(false);
     }
   }
 
   async function onSignUp() {
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Validation', 'Please enter name, email and password.');
+    const displayName = name.trim();
+    const normalizedEmail = email.trim();
+    const rawPassword = password;
+
+    if (!displayName || !normalizedEmail || !rawPassword.trim()) return;
+
+    if (rawPassword.length < 8) {
+      Alert.alert('รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร');
       return;
     }
+
     setLoading(true);
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      const user = result.user;
-      // update displayName on Firebase user
-      try {
-        await updateProfile(user, { displayName: name });
-      } catch (uErr) {
-        // non-fatal: continue even if profile update fails
-        console.warn('updateProfile failed', uErr);
-      }
-      setUser({ name, email });
+      const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, rawPassword);
+
+      // Save displayName to Firebase user profile (optional but useful)
+      await updateProfile(cred.user, { displayName });
+
+      // Save to app global user state
+      setUser({ name: displayName, email: normalizedEmail, photoURL: cred.user.photoURL || null });
+
+      // Go to main tabs immediately
       router.replace('/(tabs)');
-    } catch (err: any) {
-      Alert.alert('Sign up failed', `${err.code ?? ''} ${err.message ?? 'Unable to sign up'}`);
+    } catch (e: any) {
+      const code = e?.code as string | undefined;
+
+      let msg = 'Sign up failed. Please try again.';
+      if (code === 'auth/email-already-in-use') msg = 'This email is already in use.';
+      if (code === 'auth/invalid-email') msg = 'Invalid email address.';
+      if (code === 'auth/weak-password') msg = 'Password should be at least 6 characters.';
+
+      // keep it simple (no extra UI added)
+      // eslint-disable-next-line no-alert
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -73,50 +104,106 @@ export default function LoginScreen() {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        {/* Logo Section */}
+        <View style={styles.logoContainer}>
+          <View style={styles.logoCircle}>
+            <MaterialIcons name="restaurant" size={50} color="#166534" />
+          </View>
+          <Text style={styles.brandTitle}>NomNomUni</Text>
+          <Text style={styles.brandSubtitle}>Delicious meals within your budget</Text>
+        </View>
+
         <View style={styles.card}>
-          <Text style={styles.title}>{mode === 'login' ? 'Welcome back to NomNomUni' : 'Create your NomNomUni account'}</Text>
+          <Text style={styles.title}>
+            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+          </Text>
 
-          {mode === 'signup' && (
-            <TextInput
-              placeholder="Name"
-              value={name}
-              onChangeText={setName}
-              style={styles.input}
-              accessibilityLabel="Name input"
-            />
-          )}
+          <View style={styles.inputSection}>
+            {mode === 'signup' && (
+              <View style={styles.inputWrapper}>
+                <MaterialIcons name="person-outline" size={20} color="#64748B" style={styles.inputIcon} />
+                <TextInput
+                  placeholder="Full Name"
+                  value={name}
+                  onChangeText={setName}
+                  style={styles.input}
+                  placeholderTextColor="#94A3B8"
+                />
+              </View>
+            )}
 
-          <TextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-            accessibilityLabel="Email input"
-          />
+            <View style={styles.inputWrapper}>
+              <MaterialIcons name="mail-outline" size={20} color="#64748B" style={styles.inputIcon} />
+              <TextInput
+                placeholder="Email Address"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.input}
+                placeholderTextColor="#94A3B8"
+              />
+            </View>
 
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            style={styles.input}
-            accessibilityLabel="Password input"
-          />
+            <View>
+              <View style={styles.inputWrapper}>
+                <MaterialIcons name="lock-outline" size={20} color="#64748B" style={styles.inputIcon} />
+                <TextInput
+                  placeholder="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  style={styles.input}
+                  placeholderTextColor="#94A3B8"
+                />
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                  onPress={() => setShowPassword((v) => !v)}
+                  style={styles.eyeButton}
+                >
+                  <MaterialIcons
+                    name={showPassword ? 'visibility-off' : 'visibility'}
+                    size={22}
+                    color="#64748B"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {mode === 'signup' ? (
+                <Text
+                  style={[
+                    styles.passwordHint,
+                    { color: password.length >= 8 ? '#16A34A' : '#DC2626' },
+                  ]}
+                >
+                  Minimum 8 characters
+                </Text>
+              ) : null}
+            </View>
+          </View>
 
           <TouchableOpacity
-            style={[styles.button, loading && { opacity: 0.6 }]}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={mode === 'login' ? onLogin : onSignUp}
-            accessibilityRole="button"
             disabled={loading}
           >
-            <Text style={styles.buttonText}>{loading ? (mode === 'login' ? 'Logging in...' : 'Signing up...') : (mode === 'login' ? 'Log In' : 'Sign Up')}</Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>
+                {mode === 'login' ? 'Sign In' : 'Get Started'}
+              </Text>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setMode(mode === 'login' ? 'signup' : 'login')} style={styles.switchRow}>
-            <Text style={styles.switchText}>
-              {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
+          <TouchableOpacity 
+            onPress={() => setMode(mode === 'login' ? 'signup' : 'login')} 
+            style={styles.switchRow}
+          >
+            <Text style={styles.switchTextPre}>
+              {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}
+              <Text style={styles.switchTextLink}> {mode === 'login' ? 'Sign Up' : 'Log In'}</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -126,7 +213,7 @@ export default function LoginScreen() {
 }
 
 const PRIMARY = '#166534';
-const BACKGROUND = '#F0FDF4';
+const BACKGROUND = '#F8FAFC'; // เปลี่ยนจากสีเขียวอ่อนเป็นสีเทานวลให้ดูแพงขึ้น
 
 const styles = StyleSheet.create({
   safe: {
@@ -137,58 +224,118 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  logoCircle: {
+    width: 90,
+    height: 90,
+    backgroundColor: '#DCFCE7',
+    borderRadius: 45,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  brandTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: PRIMARY,
+    letterSpacing: -1,
+  },
+  brandSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    marginTop: 4,
   },
   card: {
     width: '100%',
-    maxWidth: 420,
-    backgroundColor: '#DCFCE7',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 30,
+    padding: 30,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2D2D2D',
-    marginBottom: 20,
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  inputSection: {
+    gap: 16,
+    marginBottom: 24,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    width: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    flex: 1,
+    height: 54,
     fontSize: 16,
-    color: '#2D2D2D',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#166534',
+    color: '#1E293B',
+    fontWeight: '500',
+  },
+  eyeButton: {
+    height: 54,
+    width: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
   },
   button: {
-    marginTop: 8,
     backgroundColor: PRIMARY,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    width: '100%',
+    height: 56,
+    borderRadius: 18,
+    justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: PRIMARY,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+    backgroundColor: '#94A3B8',
   },
   buttonText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 17,
   },
   switchRow: {
-    marginTop: 12,
+    marginTop: 20,
+    alignItems: 'center',
   },
-  switchText: {
+  switchTextPre: {
+    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  switchTextLink: {
     color: PRIMARY,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  passwordHint: {
+    marginTop: 8,
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

@@ -5,6 +5,7 @@ type FavoritesContextType = {
   toggleFavorite: (id: number, name?: string) => void;
   isFavorite: (id: number) => boolean;
   toastMessage: string | null;
+  showToast: (message: string, durationMs?: number) => void;
 };
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
@@ -17,20 +18,26 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     return favorites.includes(id);
   }
 
+  function showToast(message: string, durationMs: number = 1800) {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), durationMs);
+  }
+
   function toggleFavorite(id: number, name?: string) {
     setFavorites((prev) => {
       const exists = prev.includes(id);
       const next = exists ? prev.filter((p) => p !== id) : [...prev, id];
-      // show toast
-      setToastMessage(name ? `${name} ${exists ? 'removed from' : 'added to'} favorites` : exists ? 'Removed from favorites' : 'Added to favorites');
-      // clear toast
-      setTimeout(() => setToastMessage(null), 1500);
+      showToast(
+        name
+          ? `${name} ${exists ? 'removed from' : 'added to'} favorites`
+          : exists ? 'Removed from favorites' : 'Added to favorites'
+      );
       return next;
     });
   }
 
   return (
-    <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite, toastMessage }}>
+    <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite, toastMessage, showToast }}>
       {children}
     </FavoritesContext.Provider>
   );
