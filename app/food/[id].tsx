@@ -150,7 +150,7 @@ export default function FoodDetail() {
         {/* --- Header Image & Back Button --- */}
         <View style={styles.imageContainer}>
           <Image
-            source={food.imageUri ? { uri: food.imageUri } : require('@/assets/images/icon.png')}
+            source={food.imageUri ? { uri: food.imageUri } : require('@/assets/images/app-icon.png')}
             style={styles.mainImage}
           />
           <TouchableOpacity
