@@ -5,13 +5,14 @@ import { FlatList, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import FoodCard from '@/components/food-card';
 import { ThemedView } from '@/components/themed-view';
 import { useFavorites } from '@/context/favorites';
-import { FOODS } from '@/data/foods';
+import { useMenu } from '@/context/menu';
 
 export default function FavoriteScreen() {
   const { favorites } = useFavorites();
-  
-  // กรองรายการอาหารที่ถูกเลือกเป็น Favorite
-  const items = FOODS.filter((f) => favorites.includes(f.id));
+  const { menus } = useMenu();
+
+  // กรองเฉพาะ menus ที่อยู่ใน favorites (ใช้ string ID ตรงกัน)
+  const items = menus.filter((m) => favorites.includes(m.id));
 
   // ส่วนแสดงผลเมื่อไม่มีข้อมูล (Empty State)
   const renderEmptyContainer = () => (

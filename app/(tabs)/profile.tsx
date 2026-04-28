@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Linking,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -16,7 +17,7 @@ import { Image } from 'expo-image';
 import { useMenu } from '@/context/menu';
 import { useThemeMode } from '@/context/theme';
 import { useUser } from '@/context/user';
-import { ChevronRight, HelpCircle, Lock, LogOut, Pencil, SunMoon, User } from 'lucide-react-native';
+import { ChevronRight, HelpCircle, Lock, LogOut, Pencil, Shield, SunMoon, User } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { auth } from '@/firebase/config';
@@ -162,7 +163,7 @@ export default function ProfileScreen() {
             ]}
           >
             <TouchableOpacity
-              style={[styles.menuItem, { borderBottomWidth: 0 }]}
+              style={styles.menuItem}
               onPress={() => router.push('/modal' as any)}
               accessibilityRole="button"
             >
@@ -171,6 +172,21 @@ export default function ProfileScreen() {
                   <HelpCircle size={22} color={PRIMARY_GREEN} />
                 </View>
                 <Text style={[styles.menuLabel, { color: isDark ? '#E2E8F0' : '#334155' }]}>Help & Support</Text>
+              </View>
+              <ChevronRight size={24} color={isDark ? '#475569' : '#CBD5E1'} />
+            </TouchableOpacity>
+
+            {/* PDPA / Privacy Policy */}
+            <TouchableOpacity
+              style={[styles.menuItem, { borderBottomWidth: 0 }]}
+              onPress={() => Linking.openURL('https://pdpa.pro/policies/view/en/jZDkeAZcC9c1bKvjy2zPUY6U')}
+              accessibilityRole="button"
+            >
+              <View style={styles.menuLeft}>
+                <View style={styles.menuIconBox}>
+                  <Shield size={22} color={PRIMARY_GREEN} />
+                </View>
+                <Text style={[styles.menuLabel, { color: isDark ? '#E2E8F0' : '#334155' }]}>Privacy Policy (PDPA)</Text>
               </View>
               <ChevronRight size={24} color={isDark ? '#475569' : '#CBD5E1'} />
             </TouchableOpacity>

@@ -1,9 +1,9 @@
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
 type FavoritesContextType = {
-  favorites: number[];
-  toggleFavorite: (id: number, name?: string) => void;
-  isFavorite: (id: number) => boolean;
+  favorites: string[];
+  toggleFavorite: (id: string, name?: string) => void;
+  isFavorite: (id: string) => boolean;
   toastMessage: string | null;
   showToast: (message: string, durationMs?: number) => void;
 };
@@ -11,10 +11,10 @@ type FavoritesContextType = {
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  function isFavorite(id: number) {
+  function isFavorite(id: string) {
     return favorites.includes(id);
   }
 
@@ -23,7 +23,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     setTimeout(() => setToastMessage(null), durationMs);
   }
 
-  function toggleFavorite(id: number, name?: string) {
+  function toggleFavorite(id: string, name?: string) {
     setFavorites((prev) => {
       const exists = prev.includes(id);
       const next = exists ? prev.filter((p) => p !== id) : [...prev, id];

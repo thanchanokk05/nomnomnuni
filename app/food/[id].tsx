@@ -95,9 +95,7 @@ export default function FoodDetail() {
     );
   }
 
-  // Reviews & favorites currently key off a numeric foodId.
-  // For Firestore menus (string ids), derive a stable numeric key from createdAt.
-  const foodId: number = typeof food.id === 'number' ? food.id : food.createdAt;
+  const foodId = String(food.id);
 
   const isFav = isFavorite(foodId);
   const reviews = getReviewsByFood(foodId);
@@ -164,7 +162,7 @@ export default function FoodDetail() {
           >
             <ArrowLeft size={24} color="#1E293B" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.floatingHeart} onPress={() => toggleFavorite(foodId)}>
+          <TouchableOpacity style={styles.floatingHeart} onPress={() => { toggleFavorite(foodId, food.name); router.push('/(tabs)/favorite'); }}>
             <Heart
               size={26}
               color={isFav ? '#EF4444' : '#64748B'}
@@ -264,7 +262,10 @@ export default function FoodDetail() {
         <TouchableOpacity
           activeOpacity={0.8}
           style={[styles.primaryButton, isFav && styles.activeButton]}
-          onPress={() => toggleFavorite(foodId)}
+          onPress={() => {
+            toggleFavorite(foodId, food.name);
+            router.push('/(tabs)/favorite');
+          }}
         >
           {isFav ? (
             <CheckCircle2 size={20} color="#fff" />

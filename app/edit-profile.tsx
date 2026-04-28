@@ -16,10 +16,9 @@ import { Camera, ChevronLeft, User } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { updateProfile } from 'firebase/auth';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 import { useUser } from '@/context/user';
-import { auth, storage } from '@/firebase/config';
+import { auth } from '@/firebase/config';
 
 const PRIMARY_GREEN = '#166534';
 
@@ -47,38 +46,28 @@ export default function EditProfileScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      quality: 0.85,
+      quality: 0.3,
       allowsEditing: true,
       aspect: [1, 1],
+      base64: true,
     });
 
     if (result.canceled) return;
 
-    const uri = result.assets?.[0]?.uri;
-    if (!uri) return;
+    const asset = result.assets?.[0];
+    if (!asset) return;
 
-    // Show the new photo immediately as a local preview.
-    setPhotoUri(uri);
+    // แปลงเป็น data URI — ใช้ได้ทุก device โดยไม่ต้องใช้ Storage
+    const dataUri = asset.base64
+      ? `data:image/jpeg;base64,${asset.base64}`
+      : asset.uri;
 
-    // Optimistically reflect the change in the global user context so the
-    // Profile screen updates instantly even before upload finishes. The Save
-    // button will replace this local URI with the uploaded HTTPS URL.
+    setPhotoUri(dataUri);
     setUser({
       name: user?.name ?? current?.displayName ?? '',
       email: user?.email ?? current?.email ?? '',
-      photoURL: uri,
+      photoURL: dataUri,
     });
-  }
-
-  async function uploadProfilePhotoAsync(uri: string) {
-    if (!auth.currentUser) throw new Error('Not signed in');
-
-    const response = await fetch(uri);
-    const blob = await response.blob();
-
-    const objectRef = ref(storage, `profilePhotos/${auth.currentUser.uid}/avatar.jpg`);
-    await uploadBytes(objectRef, blob);
-    return getDownloadURL(objectRef);
   }
 
   async function onSave() {
@@ -97,19 +86,8 @@ export default function EditProfileScreen() {
 
     setSaving(true);
     try {
-      let nextPhotoUrl: string | null | undefined = auth.currentUser.photoURL;
-
-      if (photoUri && (photoUri.startsWith('file:') || photoUri.startsWith('content:'))) {
-        console.log('[edit-profile] uploading local photo to Firebase Storage');
-        const uploaded = await uploadProfilePhotoAsync(photoUri);
-        // Cache-bust: Storage path is stable, so the URL would otherwise be
-        // byte-identical and Image components keep showing the old bitmap.
-        nextPhotoUrl = `${uploaded}${uploaded.includes('?') ? '&' : '?'}t=${Date.now()}`;
-      } else if (photoUri && (photoUri.startsWith('http://') || photoUri.startsWith('https://'))) {
-        nextPhotoUrl = photoUri;
-      } else {
-        nextPhotoUrl = null;
-      }
+      // ใช้ base64 data URI โดยตรง — ไม่ต้องใช้ Storage
+      const nextPhotoUrl: string | null = photoUri ?? null;
 
       await updateProfile(auth.currentUser, {
         displayName: nextName,
@@ -189,11 +167,6 @@ export default function EditProfileScreen() {
             <Text style={styles.primaryBtnText}>{saving ? 'Saving...' : 'Save changes'}</Text>
           </TouchableOpacity>
 
-          {Platform.OS === 'web' ? (
-            <Text style={styles.note}>
-              Note: Uploading from web may require proper Firebase Storage rules and CORS.
-            </Text>
-          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>

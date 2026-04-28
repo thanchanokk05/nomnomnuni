@@ -10,7 +10,7 @@ import {
 
 type Review = {
   id: string;
-  foodId: number;
+  foodId: string;
   comment: string;
   createdAt: number;
   userId?: string;
@@ -25,8 +25,8 @@ type PublicProfile = {
 
 type ReviewContextType = {
   reviews: Review[];
-  addReview: (foodId: number, comment: string) => void;
-  getReviewsByFood: (foodId: number) => Review[];
+  addReview: (foodId: string, comment: string) => void;
+  getReviewsByFood: (foodId: string) => Review[];
   getAuthorProfile: (userId?: string) => Promise<PublicProfile>;
 };
 
@@ -68,7 +68,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
     return DEFAULT_PROFILE;
   }
 
-  function addReview(foodId: number, comment: string) {
+  function addReview(foodId: string, comment: string) {
     const cu = auth.currentUser;
     const r: Review = {
       id: String(Date.now()),
@@ -83,7 +83,7 @@ export function ReviewProvider({ children }: { children: ReactNode }) {
     setReviews((prev) => [r, ...prev]);
   }
 
-  function getReviewsByFood(foodId: number) {
+  function getReviewsByFood(foodId: string) {
     return reviews.filter((r) => r.foodId === foodId);
   }
 

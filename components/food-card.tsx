@@ -1,7 +1,7 @@
 import { useFavorites } from '@/context/favorites';
-import { FOODS } from '@/data/foods';
 import { Heart } from 'lucide-react-native';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import {
   StyleSheet,
@@ -10,11 +10,16 @@ import {
   View
 } from 'react-native';
 
-// Allow both mock foods (FOODS) and context menus (which may include imageUri)
-type Food = (typeof FOODS)[number] & {
+type Food = {
+  id: string | number;
+  name: string;
+  price: number;
+  shopName?: string;
   imageUri?: string | null;
   openHours?: string;
   operatingDays?: string[];
+  location?: string;
+  createdBy?: string;
 };
 
 const DAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -77,11 +82,19 @@ function formatOperatingDays(days?: string[]): string {
 
 export default function FoodCard({ item }: { item: Food }) {
   const { isFavorite, toggleFavorite } = useFavorites();
-  const fav = isFavorite(item.id);
+  const router = useRouter();
+  const idStr = String(item.id);
+  const fav = isFavorite(idStr);
 
   const imageSource = item.imageUri
     ? { uri: item.imageUri }
     : require('@/assets/images/icon.png');
+
+  function handleHeartPress() {
+    toggleFavorite(idStr, item.name);
+    // navigate to favorites tab เสมอ (ไม่ว่าจะ add หรือ remove)
+    router.push('/(tabs)/favorite');
+  }
 
   const openNow = useMemo(() => {
     if (!item.openHours || !item.operatingDays?.length) return false;
@@ -135,7 +148,7 @@ export default function FoodCard({ item }: { item: Food }) {
         accessibilityLabel={fav ? 'Remove from favorites' : 'Add to favorites'}
         accessibilityRole="button"
         accessibilityState={{ selected: fav }}
-        onPress={() => toggleFavorite(item.id, item.name)}
+        onPress={handleHeartPress}
         style={styles.heartButton}
       >
         <Heart size={24} color={fav ? '#15803D' : '#166534'} fill={fav ? '#15803D' : 'none'} />
