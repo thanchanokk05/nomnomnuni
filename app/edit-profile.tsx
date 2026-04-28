@@ -202,7 +202,13 @@ export default function EditProfileScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F8FAFC' },
-  scroll: { paddingHorizontal: 20, paddingBottom: 40 },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
+  },
   header: {
     marginTop: 10,
     flexDirection: 'row',

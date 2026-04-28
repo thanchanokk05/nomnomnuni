@@ -144,6 +144,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 40,
     paddingTop: 10,
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
   header: {
     marginTop: 10,

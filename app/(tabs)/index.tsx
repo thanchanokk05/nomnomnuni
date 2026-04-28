@@ -296,6 +296,9 @@ export default function HomeScreen() {
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 60,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
   header: {
     flexDirection: 'row',

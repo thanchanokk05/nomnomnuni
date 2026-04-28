@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -8,25 +8,25 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  
-  // เช็คว่าเป็นโหมดมืดหรือไม่
+  const insets = useSafeAreaInsets();
   const isDark = colorScheme === 'dark';
+
+  // Build height from safe-area inset so we don't over- or under-pad on any
+  // platform (iOS notch, Android nav bar, web zero-inset).
+  const BASE_TAB_HEIGHT = 60;
 
   return (
     <Tabs
       screenOptions={{
-        // ปรับสีปุ่มที่เลือก: โหมดมืดอาจใช้สีเขียวที่สว่างขึ้นนิดนึงเพื่อให้เห็นชัด
-        tabBarActiveTintColor: isDark ? '#4ADE80' : '#166534', 
+        tabBarActiveTintColor: isDark ? '#4ADE80' : '#166534',
         tabBarInactiveTintColor: isDark ? '#64748B' : '#94A3B8',
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          height: Platform.OS === 'ios' ? 88 : 68,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 12,
+          height: BASE_TAB_HEIGHT + insets.bottom,
+          paddingBottom: insets.bottom + 8,
           paddingTop: 8,
-          // เปลี่ยนสีพื้นหลังตามโหมด
           backgroundColor: isDark ? '#3b3a3aff' : '#FFFFFF',
-          // เปลี่ยนสีเส้นขอบด้านบน
           borderTopWidth: 1,
           borderTopColor: isDark ? '#1E293B' : '#F1F5F9',
           elevation: 0,

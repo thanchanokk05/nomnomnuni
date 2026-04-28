@@ -51,8 +51,7 @@ export default function LoginScreen() {
       if (code === 'auth/invalid-email') msg = 'อีเมลไม่ถูกต้อง';
       if (code === 'auth/too-many-requests') msg = 'ลองใหม่ภายหลัง (พยายามหลายครั้งเกินไป)';
 
-      // eslint-disable-next-line no-alert
-      alert(msg);
+      Alert.alert(msg);
     } finally {
       setLoading(false);
     }
@@ -91,8 +90,7 @@ export default function LoginScreen() {
       if (code === 'auth/weak-password') msg = 'Password should be at least 6 characters.';
 
       // keep it simple (no extra UI added)
-      // eslint-disable-next-line no-alert
-      alert(msg);
+      Alert.alert(msg);
     } finally {
       setLoading(false);
     }
@@ -252,6 +250,8 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 30,
     padding: 30,

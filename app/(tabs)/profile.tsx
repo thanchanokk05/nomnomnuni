@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Dimensions,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -8,6 +7,7 @@ import {
   Switch,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View
 } from 'react-native';
 
@@ -23,7 +23,6 @@ import { auth } from '@/firebase/config';
 import { signOut } from 'firebase/auth';
 
 const PRIMARY_GREEN = '#166534';
-const { width } = Dimensions.get('window');
 
 // Append a timestamp query so the Image component re-fetches even when the
 // underlying URL string is unchanged (Storage URLs are stable per path).
@@ -37,7 +36,9 @@ export default function ProfileScreen() {
   const { clearMenus } = useMenu();
   const router = useRouter();
   const { themeMode, setThemeMode, resolvedScheme } = useThemeMode();
-  const avatarSize = width * 0.28;
+  const { width } = useWindowDimensions();
+  // Cap avatar size on wide screens (web/tablet) — 28% of width gets huge on desktop.
+  const avatarSize = Math.min(width * 0.28, 140);
   const isDark = resolvedScheme === 'dark';
 
   // Bump this on focus to force Image to refetch even if URL string is the same.
@@ -63,11 +64,16 @@ export default function ProfileScreen() {
         {/* --- Header Section --- */}
         <View style={styles.headerSection}>
           <View style={styles.avatarWrapper}>
-            <View style={styles.avatarCircle}>
+            <View
+              style={[
+                styles.avatarCircle,
+                { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 },
+              ]}
+            >
               {photoURL ? (
                 <Image
                   source={{ uri: photoURL }}
-                  style={styles.avatarImg}
+                  style={[styles.avatarImg, { borderRadius: avatarSize / 2 }]}
                   contentFit="cover"
                   cachePolicy="none"
                 />
@@ -214,9 +220,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   avatarCircle: {
-    width: width * 0.28,
-    height: width * 0.28,
-    borderRadius: (width * 0.28) / 2,
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
@@ -230,7 +233,6 @@ const styles = StyleSheet.create({
   avatarImg: {
     width: '100%',
     height: '100%',
-    borderRadius: (width * 0.28) / 2,
   },
   editBadge: {
     position: 'absolute',

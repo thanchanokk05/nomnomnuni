@@ -97,6 +97,8 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 15,
@@ -132,6 +134,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     borderRadius: 100,
     width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
     alignItems: 'center',
   },
   closeButtonText: {

@@ -315,7 +315,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F1F5F9',
   },
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B' },
-  scrollContent: { padding: 24, paddingBottom: 40 },
+  scrollContent: {
+    padding: 24,
+    paddingBottom: 40,
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
+  },
   inputGroup: { marginBottom: 24 },
   label: {
     fontSize: 14,
