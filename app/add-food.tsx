@@ -1,9 +1,9 @@
 import HoursRangeField from '@/components/hours-range-field';
 import { useFavorites } from '@/context/favorites';
 import { useMenu } from '@/context/menu';
-import { Camera, Map as MapIcon, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { Camera, Map as MapIcon, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -100,8 +100,28 @@ export default function AddFoodScreen() {
       });
       console.log('[add-food] handleSave: addMenu resolved');
 
-      showToast('Menu added successfully 🎉', 2200);
-      router.replace('/(tabs)');
+      // immediate feedback
+      try {
+        showToast('Menu added successfully 🎉', 2200);
+      } catch (err) {
+        console.log('[add-food] showToast failed', err);
+      }
+
+      // stop spinner before navigation
+      setSaving(false);
+
+      // Navigate directly to All Menu tab (await to ensure navigation completes)
+      try {
+        await router.replace('/(tabs)');
+      } catch (err) {
+        console.log('[add-food] router.replace failed', err);
+      }
+
+      // show success alert after navigation
+      setTimeout(() => {
+        Alert.alert('Success!', 'Menu added successfully 🎉');
+      }, 250);
+
       return;
     } catch (e: any) {
       console.error('[add-food] handleSave failed:', e);
